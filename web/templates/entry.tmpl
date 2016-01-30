@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>{{ .title }}</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.3/ace.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+
+<style type="text/css" media="screen">
+#editor { 
+position: absolute;
+top: 0;
+right: 0;
+bottom: 0;
+left: 0;
+}
+</style>
+
+    {{ template "menu.tmpl" }}
+
+<div class="container">
+  <div class="row">
+    <div class="col-sm-12">
+
+        <form class="form-horizontal" method="post" action="{{ .prefix }}/entry/{{ .entry.Id }}">
+<fieldset>
+
+<!-- Form Name -->
+<legend>Entry</legend>
+
+<div class="form-group">
+  <label class="col-md-4 control-label" for="data">Title</label>
+  <div class="col-md-8">
+      <input class="form-control" id="title" name="Title" value="{{ .entry.Title }}" />
+  </div>
+</div>
+
+<!-- Textarea -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="data">Markdown</label>
+  <div class="col-md-8">
+<!--    <textarea class="form-control" id="markdown" rows=20 name="Markdown">{{ .entry.Markdown }}</textarea>
+-->
+   <input type="hidden" id="markdown" name="Markdown"/>
+<div class="container">
+<div class="panel panel-default">
+<div class="panel-heading">
+<h3 class="panel-title">Editor</h3>
+</div>
+<div class="panel-body">
+    <div id="editor"></div>
+</div>
+</div>
+<div class="text-center">---End of editor---</div>
+</div>
+
+</div>
+</div>
+
+<!-- Button -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="singlebutton"></label>
+  <div class="col-md-4">
+    <button  name="btnsave" id="btnsave" class="btn btn-primary">Save</button>
+  </div>
+</div>
+<hr />
+
+<!-- Select Basic -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="selectbasic">Last versions saved</label>
+  <div class="col-md-5">
+    <select id="selectversion" name="selectversion" class="form-control">
+<!--     {{ range $version := .versions }}
+        <option value="{{ $version.CreationDate }}">{{ $version.Name }}</option>
+     {{ end }}
+     -->
+    </select>
+  </div>
+</div>
+
+<!-- Button -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="singlebutton"></label>
+  <div class="col-md-4">
+    <button  name="btnretrieve" id="btnretrieve" class="btn btn-primary">Retrieve version</button>
+  </div>
+</div>
+
+<hr />
+
+
+<!-- Button -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="singlebutton"></label>
+  <div class="col-md-4">
+    <button name="btnback" class="btn btn-normal">Back</button>
+  </div>
+</div>
+
+</fieldset>
+</form>
+
+
+    </div>
+  </div>
+</div>
+
+<script>
+var editor = ace.edit("editor");
+editor.setTheme("ace/theme/github");
+editor.getSession().setMode("ace/mode/markdown");
+editor.setValue("{{ .entry.Markdown }}")
+
+
+$( "#btnsave" ).click(function() {
+    $("#markdown").val(editor.getValue())
+});
+
+
+
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+  <link href='http://fonts.googleapis.com/css?family=Slabo+27px' rel='stylesheet' type='text/css'>
+
+  <style>
+  .groupinfo{
+    font-size: 80%;
+    margin-left: 10px;
+  }
+  .title{
+    background-color: #366;
+  }
+  hr {
+    margin-top: 5px;
+    margin-bottom: 5px;    
+  }
+  h1 {
+    margin-top: 5px;
+    margin-bottom: 5px;    
+    text-align: center;
+    color: #FFF;
+    font-family: 'Slabo 27px', serif;
+  }
+  h2 {
+    margin-top: 5px;
+    margin-bottom: 5px;    
+  }
+  </style>
+
+</head>
+<body>
+
+{{template "menu.tmpl"}}
+
+<div class="container">
+ {{ range $entry := .entries }}
+    <div class="row">
+      <div class="col-sm-12" id="text">
+          <h2>{{ $entry.Title }}</h2>
+          {{ $entry.Markdown | markdown }}
+          <a id="editbutton-{{ $entry.Id }}" href="#" class="btn btn-default pull-right">Edit</a>
+        </div>
+      </div>
+    <hr />
+  {{ end }}
+
+{{ if .error }} 
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="alert alert-danger" role="alert">
+        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+        <span class="sr-only">Error:</span>
+        <h2>{{ .error }}</h2>
+      </div>
+    </div>
+  </div>
+{{ end }}
+
+  <div class="row">
+    <div id="searchdiv" class="col-sm-12" style="display: none">
+        <div class="input-group">
+        <span class="input-group-addon" id="sizing-addon1">?</span>
+        <input id="search" type="text" class="form-control" placeholder="enter text to search" aria-describedby="sizing-addon3">
+        </div>
+        <br>
+    </div>
+    <div class="col-sm-12">
+          <a id="newbutton" href="#" class="btn btn-default btn-lg pull-right"><span class="glyphicon glyphicon-cog"></span></a>
+    </div>
+  </div>
+</div>
+
+<script>
+
+{{ range $entry := .entries }}
+  $( "#editbutton-{{ $entry.Id }}" ).click(function() {
+      window.location.href = "{{ $.prefix }}/entry/{{ $entry.Id }}";
+  });
+{{ end }}
+
+$( "#newbutton" ).click(function() {
+  window.location.href = "{{ .prefix }}/newbutton";
+});
+
+</script>
+
+</body>
+</html>
+
