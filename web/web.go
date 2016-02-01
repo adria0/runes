@@ -7,6 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/russross/blackfriday"
 	"net/http"
+    "strings"
+    "os"
 )
 
 const (
@@ -15,11 +17,14 @@ const (
 
 func InitWeb() {
 
+    server.Srv.Engine.StaticFS("/static", http.Dir("web/static"))
+
 	server.Srv.Engine.GET("/", HtmlMain)
 	server.Srv.Engine.GET("/entry/:id", HtmlGetEntry)
 	server.Srv.Engine.POST("/entry/:id", HtmlPostEntry)
 	server.Srv.Engine.POST("/markdown", HtmlMarkdown)
-
+    server.Srv.Engine.POST("/upload", HtmlPostUpload)
+    server.Srv.Engine.GET("/file/:id", HtmlGetFile)
 }
 
 type HtmlEntry struct {
@@ -33,6 +38,48 @@ func NewHtmlEntry(entry *model.Entry) *HtmlEntry {
 type MarkdownInput struct {
 	Markdown string `json:"markdown" binding:"required"`
 }
+
+func HtmlPostUpload(c *gin.Context) {
+    file,fileHeader, err := c.Request.FormFile("file")
+
+    if err!= nil {
+		HtmlDumpError(c, err)
+		return
+    }
+
+    resp:= <- server.Srv.Store.File.Write(fileHeader.Filename,file)
+
+	if resp.Err != nil {
+		HtmlDumpError(c, resp.Err)
+		return
+	}
+
+    filename := resp.Data.(string)
+    path := server.Srv.Config.Prefix + "/file/" + filename
+    split := strings.Split(filename,".")
+    ext := split[len(split)-1]
+    ico := ""
+
+    if ext == "png" || ext == "jpg" || ext =="jpeg" || ext == "gif" {
+
+    } else if _, err := os.Stat("web/static/ico."+ext+".png"); err == nil {
+        ico = "/static/ico."+ext+".png";
+    } else {
+        ico = "/static/ico.default.png";
+    }
+
+    c.JSON(http.StatusOK,gin.H{"name":fileHeader.Filename,"path":path, "ico":ico})
+}
+
+func HtmlGetFile(c *gin.Context) {
+ 	resp := <-server.Srv.Store.File.Fullpath(c.Param("id"))
+	if resp.Err != nil {
+		HtmlDumpError(c, resp.Err)
+		return
+	}
+   c.File(resp.Data.(string))
+}
+
 
 func HtmlMarkdown(c *gin.Context) {
 	var json MarkdownInput
