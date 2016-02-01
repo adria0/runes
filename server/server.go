@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"github.com/amassanet/gopad/store"
 	"github.com/gin-gonic/gin"
 	"github.com/russross/blackfriday"
@@ -25,14 +24,25 @@ var Srv *Server
 var funcName = template.FuncMap{
 	"markdown": func(s string) template.HTML {
 		proc := string(blackfriday.MarkdownCommon([]byte(s)))
-		fmt.Println(proc)
 		return template.HTML(proc)
 	},
 }
 
+func TemplateReloader(c *gin.Context) {
+	if tmpl, err := template.New("name").Funcs(funcName).ParseGlob("web/templates/*"); err == nil {
+		Srv.Engine.SetHTMLTemplate(tmpl)
+	} else {
+		panic(err)
+	}
+}
+
 func NewServer(config ServerConfiguration) {
+
+	g := gin.New()
+	g.Use(TemplateReloader, gin.Logger(), gin.Recovery())
+
 	server := Server{
-		Engine: gin.Default(),
+		Engine: g,
 		Config: config,
 	}
 
@@ -48,5 +58,5 @@ func NewServer(config ServerConfiguration) {
 }
 
 func StartServer() {
-	Srv.Engine.Run(":" + strconv.Itoa(Srv.Config.Port))
+    Srv.Engine.Run(":" + strconv.Itoa(Srv.Config.Port))
 }

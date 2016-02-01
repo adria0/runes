@@ -5,6 +5,7 @@ import (
 	"github.com/amassanet/gopad/server"
 	"github.com/amassanet/gopad/store"
 	"github.com/gin-gonic/gin"
+	"github.com/russross/blackfriday"
 	"net/http"
 )
 
@@ -17,6 +18,7 @@ func InitWeb() {
 	server.Srv.Engine.GET("/", HtmlMain)
 	server.Srv.Engine.GET("/entry/:id", HtmlGetEntry)
 	server.Srv.Engine.POST("/entry/:id", HtmlPostEntry)
+	server.Srv.Engine.POST("/markdown", HtmlMarkdown)
 
 }
 
@@ -26,6 +28,18 @@ type HtmlEntry struct {
 
 func NewHtmlEntry(entry *model.Entry) *HtmlEntry {
 	return &HtmlEntry{entry}
+}
+
+type MarkdownInput struct {
+	Markdown string `json:"markdown" binding:"required"`
+}
+
+func HtmlMarkdown(c *gin.Context) {
+	var json MarkdownInput
+	if c.BindJSON(&json) == nil {
+		html := string(blackfriday.MarkdownCommon([]byte(json.Markdown)))
+		c.JSON(http.StatusOK, gin.H{"html": html})
+	}
 }
 
 func HtmlMain(c *gin.Context) {

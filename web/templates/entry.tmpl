@@ -13,113 +13,110 @@
 
 <style type="text/css" media="screen">
 #editor { 
-position: absolute;
+position: relative;
 top: 0;
 right: 0;
 bottom: 0;
 left: 0;
 }
+.top-buffer { margin-top:20px;  }
 </style>
 
     {{ template "menu.tmpl" }}
 
 <div class="container">
   <div class="row">
-    <div class="col-sm-12">
+    <div class="col-md-12">
 
-        <form class="form-horizontal" method="post" action="{{ .prefix }}/entry/{{ .entry.Id }}">
-<fieldset>
-
-<!-- Form Name -->
-<legend>Entry</legend>
-
-<div class="form-group">
-  <label class="col-md-4 control-label" for="data">Title</label>
-  <div class="col-md-8">
-      <input class="form-control" id="title" name="Title" value="{{ .entry.Title }}" />
+    <form class="form-horizontal" method="post" action="{{ .prefix }}/entry/{{ .entry.Id }}">
+    <h2>Title<h2>
+    <input class="form-control" id="title" name="Title" value="{{ .entry.Title }}" />
+    <h2>Markdown</h2>
+    <input type="hidden" id="markdown" name="Markdown"/>
+    <div class="col-md-6">
+       <div id="editor">
+       </div>
+    </div>
+    <div class="col-md-6" id="render">
+    </div>
+  
+    </div>
   </div>
-</div>
-
-<!-- Textarea -->
-<div class="form-group">
-  <label class="col-md-4 control-label" for="data">Markdown</label>
-  <div class="col-md-8">
-<!--    <textarea class="form-control" id="markdown" rows=20 name="Markdown">{{ .entry.Markdown }}</textarea>
--->
-   <input type="hidden" id="markdown" name="Markdown"/>
-<div class="container">
-<div class="panel panel-default">
-<div class="panel-heading">
-<h3 class="panel-title">Editor</h3>
-</div>
-<div class="panel-body">
-    <div id="editor"></div>
-</div>
-</div>
-<div class="text-center">---End of editor---</div>
-</div>
-
-</div>
-</div>
-
+  <div class="row top-buffer">
 <!-- Button -->
-<div class="form-group">
-  <label class="col-md-4 control-label" for="singlebutton"></label>
-  <div class="col-md-4">
-    <button  name="btnsave" id="btnsave" class="btn btn-primary">Save</button>
-  </div>
+    <div class="col-md-12">
+        <button  name="btnsave" id="btnsave" class="btn btn-primary btn-lg">Save</button>
+         <button name="btnback" class="btn btn-normal btn-lg">Back</button>
+    </div>
 </div>
-<hr />
-
-<!-- Select Basic -->
-<div class="form-group">
-  <label class="col-md-4 control-label" for="selectbasic">Last versions saved</label>
-  <div class="col-md-5">
-    <select id="selectversion" name="selectversion" class="form-control">
-<!--     {{ range $version := .versions }}
-        <option value="{{ $version.CreationDate }}">{{ $version.Name }}</option>
-     {{ end }}
-     -->
-    </select>
-  </div>
-</div>
-
 <!-- Button -->
-<div class="form-group">
-  <label class="col-md-4 control-label" for="singlebutton"></label>
-  <div class="col-md-4">
-    <button  name="btnretrieve" id="btnretrieve" class="btn btn-primary">Retrieve version</button>
-  </div>
-</div>
-
-<hr />
-
-
-<!-- Button -->
-<div class="form-group">
-  <label class="col-md-4 control-label" for="singlebutton"></label>
-  <div class="col-md-4">
-    <button name="btnback" class="btn btn-normal">Back</button>
-  </div>
-</div>
-
-</fieldset>
-</form>
-
-
+    </form>
     </div>
   </div>
 </div>
 
 <script>
+
+var localStorageDraft = "edit-{{ .entry.Id }}-value";
+var originalMarkdown = "{{ .entry.Markdown }}"
+var updateMarkdownTimeout = undefined
+
 var editor = ace.edit("editor");
 editor.setTheme("ace/theme/github");
 editor.getSession().setMode("ace/mode/markdown");
-editor.setValue("{{ .entry.Markdown }}")
+editor.setValue(originalMarkdown)
+editor.$blockScrolling = Infinity
 
+function updateMarkdownTimer() {
+    if (updateMarkdownTimeout != undefined) {
+        window.clearTimeout(updateMarkdownTimeout)
+    }
+    updateMarkdownTimeout = window.setTimeout(renderMarkdown, 2000)
+}
+
+var heightUpdateFunction = function() {
+  localStorage[localStorageDraft]=editor.getValue()
+  var newHeight =editor.getSession().getScreenLength()* editor.renderer.lineHeight
+  $('#editor').height(newHeight.toString() + "px");
+  $('#editor-section').height(newHeight.toString() + "px");
+  editor.resize();
+  updateMarkdownTimer()
+};
+
+// Set initial size to match initial content
+heightUpdateFunction();
+editor.getSession().on('change', heightUpdateFunction);
 
 $( "#btnsave" ).click(function() {
     $("#markdown").val(editor.getValue())
+    localStorage.removeItem(localStorageDraft)
+});
+
+function renderMarkdown (  ) {
+    $.ajax({
+        type: "POST",
+        url: "{{ .prefix  }}/markdown",
+        data: JSON.stringify({ Markdown: editor.getValue()  }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function(data){
+              $("#render").html(data.html);
+        },
+            failure: function(errMsg) {
+            alert(errMsg);
+        }
+    });
+}
+
+$( window ).on('beforeunload',function() {
+  draft = localStorage[localStorageDraft] 
+  if (draft != undefined && draft != originalMarkdown){
+    return "Entry not saved, discard?"
+  }
+});
+
+$( window ).on('unload',function() {
+  localStorage.removeItem(localStorageDraft)
 });
 
 
