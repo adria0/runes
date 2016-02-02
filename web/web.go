@@ -62,10 +62,10 @@ func HtmlPostUpload(c *gin.Context) {
 
     if ext == "png" || ext == "jpg" || ext =="jpeg" || ext == "gif" {
 
-    } else if _, err := os.Stat("web/static/ico."+ext+".png"); err == nil {
-        ico = "/static/ico."+ext+".png";
+    } else if _, err := os.Stat("web/static/ico/"+ext+".png"); err == nil {
+        ico = "/static/ico/"+ext+".png";
     } else {
-        ico = "/static/ico.default.png";
+        ico = "/static/ico/default.png";
     }
 
     c.JSON(http.StatusOK,gin.H{"name":fileHeader.Filename,"path":path, "ico":ico})
