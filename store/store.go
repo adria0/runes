@@ -9,6 +9,15 @@ import (
 	"time"
     "log"
     "io"
+    "strings"
+)
+
+const (
+    kOldEntriesPath = "/entries/old/"
+    kEntriesPath = "/entries/"
+    kFilesPath = "/files/"
+    kJsonExt = ".json"
+    kTxtExt = ".txt"
 )
 
 type StoreResult struct {
@@ -23,12 +32,11 @@ type StoreConfig struct {
 }
 
 type EntryStore struct {
-	StoreConfig
+    StoreConfig
 }
 
 type FileStore struct {
 	StoreConfig
-	filenameRunes map[rune]rune
 }
 
 type Store struct {
@@ -36,12 +44,22 @@ type Store struct {
 	File  *FileStore
 }
 
+
+var filenameRunes map[rune]rune
+
 func NewStore(path string) *Store {
+ 	search := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.ÀÁÈÉÌÍÒÓÙÚàáèéìíòóùúÑñ")
+	replace := []rune("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz0123456789-.aaeeiioouuaaeeiioouuNn")
+	filenameRunes = make(map[rune]rune)
+
+    for i := range search {
+		filenameRunes[search[i]] = replace[i]
+	}
 
     config := StoreConfig{path}
 
 	store := Store{
-		Entry: NewEntryStore(config),
+        Entry: NewEntryStore(config),
 		File:  NewFileStore(config),
 	}
 
@@ -53,29 +71,26 @@ func NewStore(path string) *Store {
 //   concepts are type  9999conceptname
 
 func NewFileStore(config StoreConfig) *FileStore {
- 	search := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.ÀÁÈÉÌÍÒÓÙÚàáèéìíòóùúÑñ")
-	replace := []rune("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz0123456789-.aaeeiioouuaaeeiioouuNn")
-	filenameRunes := make(map[rune]rune)
-	for i := range search {
-		filenameRunes[search[i]] = replace[i]
-	}
-    if err := os.MkdirAll(config.path+"/files/",0744) ; err!= nil {
+   if err := os.MkdirAll(config.path+kFilesPath,0744) ; err!= nil {
         log.Fatalf("Cannot create folder %v",err)
     }
-    return &FileStore{config,filenameRunes}
+    return &FileStore{config}
 }
 
 func NewEntryStore(config StoreConfig) *EntryStore {
-     if err := os.MkdirAll(config.path+"/entries/",0744) ; err!= nil {
+    if err := os.MkdirAll(config.path+kEntriesPath ,0744) ; err!= nil {
+        log.Fatalf("Cannot create folder %v",err)
+    }
+    if err := os.MkdirAll(config.path+kOldEntriesPath ,0744) ; err!= nil {
         log.Fatalf("Cannot create folder %v",err)
     }
     return &EntryStore{config}
 }
 
-func (fs *FileStore) replaceFilenameChars(s string) string {
+func replaceFilenameChars(s string) string {
 	r := []rune(s)
 	for i := range r {
-		if k, exist := fs.filenameRunes[r[i]]; exist {
+		if k, exist := filenameRunes[r[i]]; exist {
 			r[i] = k
 
 		} else {
@@ -93,10 +108,10 @@ func (fs *FileStore) Write(filename string, reader io.Reader ) StoreChannel {
 
         filename := fmt.Sprintf("%v_%v",
             int32(time.Now().Unix()),
-            fs.replaceFilenameChars(filename),
+            replaceFilenameChars(filename),
         )
 
-        f, err := os.Create(fs.path+"/files/"+filename)
+        f, err := os.Create(fs.path+kFilesPath+filename)
  		if err != nil {
 			forwardErrorAndClose(ch, err)
 			return
@@ -121,13 +136,38 @@ func (es *FileStore) Fullpath(filename string) StoreChannel {
 
 	go func() {
 
-        fullpath := es.path+"/files/"+filename
+        fullpath := es.path+kFilesPath+filename
 
 		sendSuccessAndClose(ch, fullpath)
 	}()
 
 	return ch
 }
+
+func (es *EntryStore) add(entry *model.Entry) error {
+
+    filename := replaceFilenameChars(entry.Title) + "_" + entry.Id
+
+    err := ioutil.WriteFile(es.path+kEntriesPath+filename+kTxtExt, []byte(entry.Markdown), 0644)
+
+    if err != nil {
+        return err
+    }
+
+    encoded, err := json.Marshal(entry)
+    if err != nil {
+        return err
+    }
+
+    err = ioutil.WriteFile(es.path+kEntriesPath+filename+kJsonExt, encoded, 0644)
+
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
 
 func (es *EntryStore) Add(entry *model.Entry) StoreChannel {
 
@@ -137,15 +177,9 @@ func (es *EntryStore) Add(entry *model.Entry) StoreChannel {
 
 		entry.Id = time.Now().Format("20060102150405")
 
-		encoded, err := json.Marshal(entry)
-		if err != nil {
-			forwardErrorAndClose(ch, err)
-			return
-		}
+        err := es.add(entry)
 
-		err = ioutil.WriteFile(es.path+"/entries/"+entry.Id, encoded, 0644)
-
-		if err != nil {
+        if err != nil {
 			forwardErrorAndClose(ch, err)
 			return
 		}
@@ -162,14 +196,24 @@ func (es *EntryStore) Update(entry *model.Entry) StoreChannel {
 
 	go func() {
 
-		encoded, err := json.Marshal(entry)
+        filename,err := es.getFilenameForId (entry.Id)
 		if err != nil {
 			forwardErrorAndClose(ch, err)
 			return
 		}
 
-		err = ioutil.WriteFile(es.path+"/entries/"+entry.Id, encoded, 0644)
+        now := time.Now().Format("20060102150405")
+        os.Rename(
+            es.path+kEntriesPath+filename+kTxtExt,
+            es.path+kOldEntriesPath+filename+"_"+now+kTxtExt,
+        )
+        os.Rename(
+            es.path+kEntriesPath+filename+kJsonExt,
+            es.path+kOldEntriesPath+filename+"_"+now+kJsonExt,
+        )
 
+
+        err = es.add(entry)
 		if err != nil {
 			forwardErrorAndClose(ch, err)
 			return
@@ -181,28 +225,69 @@ func (es *EntryStore) Update(entry *model.Entry) StoreChannel {
 	return ch
 }
 
+func (es *EntryStore) get(filename string) (*model.Entry,error) {
+
+    rawjson, err := ioutil.ReadFile(es.path + kEntriesPath + filename+kJsonExt)
+    if err != nil {
+        return nil,err
+    }
+    var entry model.Entry
+    err = json.Unmarshal(rawjson, &entry)
+    if err != nil {
+        return nil,err
+    }
+
+    rawentry, err := ioutil.ReadFile(es.path + kEntriesPath  + filename+kTxtExt)
+    if err != nil {
+        return nil,err
+    }
+    entry.Markdown = string(rawentry)
+
+    return &entry,nil
+}
+
 func (es *EntryStore) Get(Id string) StoreChannel {
 
 	ch := make(StoreChannel)
 
 	go func() {
 
-		raw, err := ioutil.ReadFile(es.path + "/entries/" + Id)
-		if err != nil {
-			forwardErrorAndClose(ch, err)
-			return
-		}
-		var entry model.Entry
-		err = json.Unmarshal(raw, &entry)
+        filename,err := es.getFilenameForId(Id)
 		if err != nil {
 			forwardErrorAndClose(ch, err)
 			return
 		}
 
-		sendSuccessAndClose(ch, &entry)
+		entry, err := es.get(filename)
+		if err != nil {
+			forwardErrorAndClose(ch, err)
+			return
+		}
+
+		sendSuccessAndClose(ch, entry)
 	}()
 
 	return ch
+}
+
+func (es *EntryStore) getFilenameForId(Id string) (string,error) {
+    fileInfos, err := ioutil.ReadDir(es.path+kEntriesPath)
+
+	if err != nil {
+		return "", err
+	}
+
+    suffix := "_"+Id+kTxtExt
+    for _, fileInfo := range fileInfos {
+        if !fileInfo.IsDir() {
+            name := fileInfo.Name()
+            if strings.HasSuffix(name,suffix) {
+                return name[:len(name)-len(kTxtExt)], nil
+            }
+        }
+    }
+
+    return "", fmt.Errorf("File not found for entry %v",Id)
 }
 
 func (es *EntryStore) List() StoreChannel {
@@ -211,7 +296,7 @@ func (es *EntryStore) List() StoreChannel {
 
 	go func() {
 
-		fileInfos, err := ioutil.ReadDir(es.path+"/entries/")
+    fileInfos, err := ioutil.ReadDir(es.path+kEntriesPath)
 
 		if err != nil {
 			forwardErrorAndClose(ch, err)
@@ -221,19 +306,14 @@ func (es *EntryStore) List() StoreChannel {
 		entries := make([]*model.Entry, 0, len(fileInfos))
 
 		for _, fileInfo := range fileInfos {
-			if !fileInfo.IsDir() {
-				raw, err := ioutil.ReadFile(es.path + "/entries/" + fileInfo.Name())
+			if !fileInfo.IsDir() && strings.HasSuffix(fileInfo.Name(),kTxtExt) {
+                name := fileInfo.Name()
+                entry, err := es.get(name[:len(name)-len(kTxtExt)])
 				if err != nil {
 					forwardErrorAndClose(ch, err)
 					return
 				}
-				var entry model.Entry
-				err = json.Unmarshal(raw, &entry)
-				if err != nil {
-					forwardErrorAndClose(ch, err)
-					return
-				}
-				entries = append(entries, &entry)
+				entries = append(entries, entry)
 			}
 		}
 
