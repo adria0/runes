@@ -20,13 +20,6 @@ const (
     kTxtExt = ".txt"
 )
 
-type StoreResult struct {
-	Data interface{}
-	Err  error
-}
-
-type StoreChannel chan StoreResult
-
 type StoreConfig struct {
 	path string
 }
@@ -43,7 +36,6 @@ type Store struct {
 	Entry *EntryStore
 	File  *FileStore
 }
-
 
 var filenameRunes map[rune]rune
 
@@ -101,47 +93,31 @@ func replaceFilenameChars(s string) string {
 	return string(r)
 }
 
-func (fs *FileStore) Write(filename string, reader io.Reader ) StoreChannel {
-	ch := make(StoreChannel)
-
-	go func() {
+func (fs *FileStore) Write(file string, reader io.Reader ) (string, error) {
 
         filename := fmt.Sprintf("%v_%v",
             int32(time.Now().Unix()),
-            replaceFilenameChars(filename),
+            replaceFilenameChars(file),
         )
 
         f, err := os.Create(fs.path+kFilesPath+filename)
  		if err != nil {
-			forwardErrorAndClose(ch, err)
-			return
+			return "",err
 		}
 
         defer f.Close()
 
         if _, err := io.Copy(f,reader) ; err != nil {
-            forwardErrorAndClose(ch, err)
-            return
+            return "",err
         }
 
-		sendSuccessAndClose(ch, filename)
-	}()
+        return filename,nil
 
-	return ch
 }
 
-func (es *FileStore) Fullpath(filename string) StoreChannel {
+func (es *FileStore) Fullpath(filename string) string{
 
-    ch := make(StoreChannel)
-
-	go func() {
-
-        fullpath := es.path+kFilesPath+filename
-
-		sendSuccessAndClose(ch, fullpath)
-	}()
-
-	return ch
+    return es.path+kFilesPath+filename
 }
 
 func (es *EntryStore) add(entry *model.Entry) error {
@@ -169,37 +145,24 @@ func (es *EntryStore) add(entry *model.Entry) error {
 }
 
 
-func (es *EntryStore) Add(entry *model.Entry) StoreChannel {
-
-	ch := make(StoreChannel)
-
-	go func() {
+func (es *EntryStore) Add(entry *model.Entry) error {
 
 		entry.Id = time.Now().Format("20060102150405")
 
         err := es.add(entry)
 
         if err != nil {
-			forwardErrorAndClose(ch, err)
-			return
+			return err
 		}
 
-		sendSuccessAndClose(ch, nil)
-	}()
-
-	return ch
+	return nil
 }
 
-func (es *EntryStore) Update(entry *model.Entry) StoreChannel {
-
-	ch := make(StoreChannel)
-
-	go func() {
+func (es *EntryStore) Update(entry *model.Entry) error{
 
         filename,err := es.getFilenameForId (entry.Id)
 		if err != nil {
-			forwardErrorAndClose(ch, err)
-			return
+			return err
 		}
 
         now := time.Now().Format("20060102150405")
@@ -215,14 +178,10 @@ func (es *EntryStore) Update(entry *model.Entry) StoreChannel {
 
         err = es.add(entry)
 		if err != nil {
-			forwardErrorAndClose(ch, err)
-			return
+			return err
 		}
 
-		sendSuccessAndClose(ch, nil)
-	}()
-
-	return ch
+	return nil
 }
 
 func (es *EntryStore) get(filename string) (*model.Entry,error) {
@@ -246,28 +205,20 @@ func (es *EntryStore) get(filename string) (*model.Entry,error) {
     return &entry,nil
 }
 
-func (es *EntryStore) Get(Id string) StoreChannel {
+func (es *EntryStore) Get(Id string) (*model.Entry, error){
 
-	ch := make(StoreChannel)
-
-	go func() {
 
         filename,err := es.getFilenameForId(Id)
 		if err != nil {
-			forwardErrorAndClose(ch, err)
-			return
+			return nil,err
 		}
 
 		entry, err := es.get(filename)
 		if err != nil {
-			forwardErrorAndClose(ch, err)
-			return
+			return nil,err
 		}
 
-		sendSuccessAndClose(ch, entry)
-	}()
-
-	return ch
+        return entry,nil
 }
 
 func (es *EntryStore) getFilenameForId(Id string) (string,error) {
@@ -290,17 +241,12 @@ func (es *EntryStore) getFilenameForId(Id string) (string,error) {
     return "", fmt.Errorf("File not found for entry %v",Id)
 }
 
-func (es *EntryStore) List() StoreChannel {
-
-	ch := make(StoreChannel)
-
-	go func() {
+func (es *EntryStore) List() ([]*model.Entry, error) {
 
     fileInfos, err := ioutil.ReadDir(es.path+kEntriesPath)
 
 		if err != nil {
-			forwardErrorAndClose(ch, err)
-			return
+			return nil, err
 		}
 
 		entries := make([]*model.Entry, 0, len(fileInfos))
@@ -310,15 +256,10 @@ func (es *EntryStore) List() StoreChannel {
                 name := fileInfo.Name()
                 entry, err := es.get(name[:len(name)-len(kTxtExt)])
 				if err != nil {
-					forwardErrorAndClose(ch, err)
-					return
+                    return nil, err
 				}
 				entries = append(entries, entry)
 			}
 		}
-
-		sendSuccessAndClose(ch, entries[:])
-	}()
-
-	return ch
+        return entries[:], nil
 }

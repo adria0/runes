@@ -3,7 +3,6 @@ package web
 import (
 	"github.com/amassanet/gopad/model"
 	"github.com/amassanet/gopad/server"
-	"github.com/amassanet/gopad/store"
 	"github.com/gin-gonic/gin"
 	"github.com/russross/blackfriday"
 	"net/http"
@@ -47,14 +46,13 @@ func HtmlPostUpload(c *gin.Context) {
 		return
     }
 
-    resp:= <- server.Srv.Store.File.Write(fileHeader.Filename,file)
+    filename,err := server.Srv.Store.File.Write(fileHeader.Filename,file)
 
-	if resp.Err != nil {
-		HtmlDumpError(c, resp.Err)
+	if  err != nil {
+		HtmlDumpError(c, err)
 		return
 	}
 
-    filename := resp.Data.(string)
     path := server.Srv.Config.Prefix + "/file/" + filename
     split := strings.Split(filename,".")
     ext := split[len(split)-1]
@@ -72,12 +70,8 @@ func HtmlPostUpload(c *gin.Context) {
 }
 
 func HtmlGetFile(c *gin.Context) {
- 	resp := <-server.Srv.Store.File.Fullpath(c.Param("id"))
-	if resp.Err != nil {
-		HtmlDumpError(c, resp.Err)
-		return
-	}
-   c.File(resp.Data.(string))
+ 	file := server.Srv.Store.File.Fullpath(c.Param("id"))
+   c.File(file)
 }
 
 
@@ -91,20 +85,18 @@ func HtmlMarkdown(c *gin.Context) {
 
 func HtmlMain(c *gin.Context) {
 
-	resp := <-server.Srv.Store.Entry.List()
-	if resp.Err != nil {
-		HtmlDumpError(c, resp.Err)
+	entries, err := server.Srv.Store.Entry.List()
+	if err != nil {
+		HtmlDumpError(c, err)
 		return
 	}
-
-	entries := resp.Data.([]*model.Entry)
 
 	htmlEntries := []HtmlEntry{}
 	for _, entry := range entries {
 		htmlEntries = append(htmlEntries, HtmlEntry{entry})
 	}
 
-	var err error = nil
+	err  = nil
 	c.HTML(http.StatusOK, "index.tmpl", gin.H{
 		"title":   "Main website",
 		"prefix":  server.Srv.Config.Prefix,
@@ -131,12 +123,11 @@ func HtmlGetEntry(c *gin.Context) {
 	var entry *model.Entry
 
 	if id != "new" {
-		result := <-server.Srv.Store.Entry.Get(id)
-		if result.Err != nil {
-			HtmlDumpError(c, result.Err)
-			return
+        var err error
+		entry, err = server.Srv.Store.Entry.Get(id)
+		if err != nil {
+			HtmlDumpError(c, err)
 		}
-		entry = result.Data.(*model.Entry)
 	} else {
 		entry = &model.Entry{Id: "new"}
 	}
@@ -158,14 +149,14 @@ func HtmlPostEntry(c *gin.Context) {
 			Markdown: c.DefaultPostForm("Markdown", "undefined"),
 		}
 
-		var result store.StoreResult
+        var err error
 		if entry.Id == "new" {
-			result = <-server.Srv.Store.Entry.Add(&entry)
+            err  = server.Srv.Store.Entry.Add(&entry)
 		} else {
-			result = <-server.Srv.Store.Entry.Update(&entry)
+            err  =server.Srv.Store.Entry.Update(&entry)
 		}
-		if result.Err != nil {
-			HtmlDumpError(c, result.Err)
+		if err != nil {
+			HtmlDumpError(c, err)
 			return
 		}
 		c.Redirect(301, server.Srv.Config.Prefix+"/")
