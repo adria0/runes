@@ -2,13 +2,13 @@ package store
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/amassanet/gopad/model"
 	"io/ioutil"
 	"log"
 	"os"
 	"strings"
 	"time"
+    "errors"
 )
 
 const (
@@ -18,6 +18,11 @@ const (
 	txtExt         = ".txt"
     dateTimeFormat  = "20060102150405"
 )
+
+var (
+    errNotExists = errors.New("File does not exist")
+)
+
 
 type EntryStore struct {
 	Config
@@ -36,8 +41,17 @@ func NewEntryStore(config Config) *EntryStore {
 func (es *EntryStore) add(entry *model.Entry) error {
 
 	filename := replaceFilenameChars(entry.Title) + "_" + entry.ID
+    txtPath := es.path+entriesPath+filename+txtExt
+    jsonPath := es.path+entriesPath+filename+jsonExt
 
-	err := ioutil.WriteFile(es.path+entriesPath+filename+txtExt, []byte(entry.Markdown), 0644)
+    if _, err := os.Stat(txtPath); err == nil {
+        panic("Oops, cannot override files!")
+    }
+    if _, err := os.Stat(jsonPath); err == nil {
+        panic("Oops, cannot override files!")
+    }
+
+	err := ioutil.WriteFile(txtPath, []byte(entry.Markdown), 0644)
 
 	if err != nil {
 		return err
@@ -48,7 +62,7 @@ func (es *EntryStore) add(entry *model.Entry) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(es.path+entriesPath+filename+jsonExt, encoded, 0644)
+	err = ioutil.WriteFile(jsonPath, encoded, 0644)
 
 	if err != nil {
 		return err
@@ -57,35 +71,31 @@ func (es *EntryStore) add(entry *model.Entry) error {
 	return nil
 }
 
-func (es *EntryStore) Add(entry *model.Entry) error {
+func (es *EntryStore) NewID() string {
 
-	entry.ID = time.Now().Format(dateTimeFormat)
+	return time.Now().Format(dateTimeFormat)
 
-	err := es.add(entry)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
-func (es *EntryStore) Update(entry *model.Entry) error {
+func (es *EntryStore) Store(entry *model.Entry) error {
 
 	filename, err := es.getFilenameForID(entry.ID)
-	if err != nil {
+
+    if err != nil && err != errNotExists {
 		return err
 	}
 
-    now := time.Now().Format(dateTimeFormat)
-	os.Rename(
-		es.path+entriesPath+filename+txtExt,
-		es.path+oldentriesPath+filename+"_"+now+txtExt,
-	)
-	os.Rename(
-		es.path+entriesPath+filename+jsonExt,
-		es.path+oldentriesPath+filename+"_"+now+jsonExt,
-	)
+    if err == nil {
+        now := time.Now().Format(dateTimeFormat)
+        os.Rename(
+            es.path+entriesPath+filename+txtExt,
+            es.path+oldentriesPath+filename+"_"+now+txtExt,
+        )
+        os.Rename(
+            es.path+entriesPath+filename+jsonExt,
+            es.path+oldentriesPath+filename+"_"+now+jsonExt,
+        )
+    }
 
 	err = es.add(entry)
 	if err != nil {
@@ -148,7 +158,7 @@ func (es *EntryStore) getFilenameForID(ID string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("File not found for entry %v", ID)
+	return "", errNotExists
 }
 
 func (es *EntryStore) List() ([]*model.Entry, error) {

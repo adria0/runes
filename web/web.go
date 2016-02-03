@@ -19,7 +19,7 @@ func InitWeb() {
 	server.Srv.Engine.GET("/entry/:id", doGETEntry)
 	server.Srv.Engine.POST("/entry/:id", doPOSTEntry)
 	server.Srv.Engine.POST("/markdown", doPOSTMarkdown)
-	server.Srv.Engine.POST("/upload", doPOSTUpload)
+    server.Srv.Engine.POST("/entry/:id/file", doPOSTUpload)
 	server.Srv.Engine.GET("/file/:id", doGETFile)
 }
 
@@ -32,17 +32,19 @@ type dtoMarkdownRender struct {
 }
 
 func doPOSTUpload(c *gin.Context) {
-	file, fileHeader, err := c.Request.FormFile("file")
+
+    id := c.Param("id")
+
+    file, fileHeader, err := c.Request.FormFile("file")
 
 	if err != nil {
-	    dumpError(c, err)
+        c.JSON(http.StatusBadRequest , gin.H{"error":err.Error()})
 		return
 	}
 
-	filename, err := server.Srv.Store.File.Write(fileHeader.Filename, file)
-
+	filename, err := server.Srv.Store.File.Write(fileHeader.Filename, id, file)
 	if err != nil {
-		dumpError(c, err)
+        c.JSON(http.StatusBadRequest , gin.H{"error":err.Error()})
 		return
 	}
 
@@ -121,8 +123,10 @@ func doGETEntry(c *gin.Context) {
 		    dumpError(c, err)
             return
 		}
-	} else {
-		entry = &model.Entry{ID: "new"}
+    } else {
+        entry = &model.Entry{
+            ID: server.Srv.Store.Entry.NewID(),
+        }
 	}
 
 	c.HTML(http.StatusOK, "entry.tmpl", gin.H{
@@ -142,12 +146,7 @@ func doPOSTEntry(c *gin.Context) {
 			Markdown: c.DefaultPostForm("Markdown", "undefined"),
 		}
 
-		var err error
-		if entry.ID == "new" {
-			err = server.Srv.Store.Entry.Add(&entry)
-		} else {
-			err = server.Srv.Store.Entry.Update(&entry)
-		}
+		err := server.Srv.Store.Entry.Store(&entry)
 		if err != nil {
 			dumpError(c, err)
 			return

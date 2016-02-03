@@ -139,9 +139,15 @@ $( window ).on('unload',function() {
   localStorage.removeItem(localStorageDraft)
 });
 
-Dropzone.options.droparea = {
-    init: function() {
-    this.on("success", function(file) {
+new Dropzone(document.body, { // Make the whole body a dropzone
+    url: "/entry/{{ .entry.ID }}/file",
+    previewsContainer: "#previews", // Define the container to display the previews
+    clickable: "#previews", // Define the element that should be used as click trigger to select files.
+    addedfile: function(file) { console.log(file);  },
+    error: function(file, response) {
+        alert(response.error); 
+    },
+    success: function(file) {
         json = jQuery.parseJSON(file.xhr.response)
         if ( json.ico != "" ) {
             markdown = "[![]("+json.ico+")]("+json.path+")"+json.name
@@ -149,16 +155,9 @@ Dropzone.options.droparea = {
             markdown ="![]("+json.path+")"
         }
         editor.insert(markdown);
-    });
     }
-};
 
- new Dropzone(document.body, { // Make the whole body a dropzone
-    addedfile: function(file) { console.log(file);  },
-    url: "/upload",
-    previewsContainer: "#previews", // Define the container to display the previews
-    clickable: "#previews" // Define the element that should be used as click trigger to select files.
-    });
+});
 
 </script>
 

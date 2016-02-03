@@ -5,11 +5,15 @@ import (
 	"io"
 	"log"
 	"os"
-	"time"
+    "errors"
 )
 
 const (
 	filesPath      = "/files/"
+)
+
+var (
+    errFileAlreadyExists = errors.New("File already exists")
 )
 
 type FileStore struct {
@@ -23,14 +27,16 @@ func NewFileStore(config Config) *FileStore {
 	return &FileStore{config}
 }
 
-func (fs *FileStore) Write(file string, reader io.Reader) (string, error) {
+func (fs *FileStore) Write(file string, entryID string, reader io.Reader) (string, error) {
 
-	filename := fmt.Sprintf("%v_%v",
-		int32(time.Now().Unix()),
-		replaceFilenameChars(file),
-	)
+	filename := fmt.Sprintf("%v_%v",entryID, replaceFilenameChars(file))
+    path := fs.path + filesPath + filename
 
-	f, err := os.Create(fs.path + filesPath + filename)
+    if _, err := os.Stat(path); err == nil {
+        return "",errFileAlreadyExists
+    }
+
+	f, err := os.Create(path)
 	if err != nil {
 		return "", err
 	}
@@ -42,7 +48,6 @@ func (fs *FileStore) Write(file string, reader io.Reader) (string, error) {
 	}
 
 	return filename, nil
-
 }
 
 func (fs *FileStore) Fullpath(filename string) string {
