@@ -47,7 +47,7 @@
   <div class="row">
     <div class="col-md-12">
 
-    <form class="form-horizontal" method="post" action="{{ .prefix }}/entry/{{ .entry.Id }}">
+    <form class="form-horizontal" method="post" action="{{ .prefix }}/entry/{{ .entry.ID }}">
     <input class="form-control input-large" id="title" name="Title" value="{{ .entry.Title }}" />
     
     <h2>Markdown</h2>
@@ -77,7 +77,7 @@
 
 <script>
 
-var localStorageDraft = "edit-{{ .entry.Id }}-value";
+var localStorageDraft = "edit-{{ .entry.ID }}-value";
 var originalMarkdown = "{{ .entry.Markdown }}"
 var updateMarkdownTimeout = undefined
 

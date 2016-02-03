@@ -8,13 +8,13 @@ import (
 	"strconv"
 )
 
-type ServerConfiguration struct {
+type Config struct {
 	Port   int
 	Prefix string
 }
 
 type Server struct {
-	Config ServerConfiguration
+	Config
 	Engine *gin.Engine
 	Store  *store.Store
 }
@@ -28,7 +28,7 @@ var funcName = template.FuncMap{
 	},
 }
 
-func TemplateReloader(c *gin.Context) {
+func templateReloader(c *gin.Context) {
 	if tmpl, err := template.New("name").Funcs(funcName).ParseGlob("web/templates/*"); err == nil {
 		Srv.Engine.SetHTMLTemplate(tmpl)
 	} else {
@@ -36,10 +36,10 @@ func TemplateReloader(c *gin.Context) {
 	}
 }
 
-func NewServer(config ServerConfiguration) {
+func NewServer(config Config) {
 
 	g := gin.New()
-	g.Use(TemplateReloader, gin.Logger(), gin.Recovery())
+	g.Use(templateReloader, gin.Logger(), gin.Recovery())
 
 	server := Server{
 		Engine: g,
@@ -52,7 +52,6 @@ func NewServer(config ServerConfiguration) {
 		panic(err)
 	}
 
-	//server.Engine.LoadHTMLGlob("web/templates/*")
 	server.Store = store.NewStore("/tmp/e")
 	Srv = &server
 }
