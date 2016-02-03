@@ -6,6 +6,8 @@ import (
 	"github.com/russross/blackfriday"
 	"html/template"
 	"strconv"
+    "os/user"
+    "log"
 )
 
 type Config struct {
@@ -52,7 +54,12 @@ func NewServer(config Config) {
 		panic(err)
 	}
 
-	server.Store = store.NewStore("/tmp/e")
+    usr,err := user.Current()
+    if err!= nil {
+        log.Fatal(err)
+    }
+
+	server.Store = store.NewStore(usr.HomeDir+"/.gopad")
 	Srv = &server
 }
 
