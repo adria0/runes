@@ -16,24 +16,28 @@
 <body id="droparea">
 
 <style type="text/css" media="screen">
+
 #editor { 
-position: relative;
-top: 0;
-right: 0;
-bottom: 0;
-left: 0;
+    position: relative;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
 }
+
 .top-buffer { margin-top:20px;  }
 
-
-.dropzone {
-    min-height: 1px;
-    padding: 0px 0px;
+.input-large {
+    height: 44px !important;
+    margin-bottom: 10px !important;
+    line-height: 30px !important;
+    padding: 11px 19px !important;
+    font-size: 30px !important;
+    -webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
+    border-radius: 6px;
 }
 
-#dropzone { margin-bottom: 3rem;  }
-
-.dropzone { border: 2px dashed #0087F7; border-radius: 5px; background: white;  }
 
 </style>
 
@@ -43,15 +47,8 @@ left: 0;
   <div class="row">
     <div class="col-md-12">
 
-    <div class="col-md-10"><h2>Title</h2></div>
-    <div class="col-md-2">
-    <!--<form action="/upload" class="dropzone" id="upload">
-    <div class="dz-message needsclick">Drop files here or click to upload.</div>
-    </form> -->
-    </div>
-
     <form class="form-horizontal" method="post" action="{{ .prefix }}/entry/{{ .entry.Id }}">
-    <input class="form-control" id="title" name="Title" value="{{ .entry.Title }}" />
+    <input class="form-control input-large" id="title" name="Title" value="{{ .entry.Title }}" />
     
     <h2>Markdown</h2>
     
