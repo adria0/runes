@@ -13,13 +13,18 @@ import (
 // InitWeb Initializes the web
 func InitWeb() {
 
+    initAuthentication()
+
 	server.Srv.Engine.StaticFS("/static", http.Dir("web/static"))
 
 	server.Srv.Engine.GET("/", doGETRoot)
-	server.Srv.Engine.GET("/entry/:id", doGETEntry)
+
+    server.Srv.Engine.GET("/login",doGETLogin)
+    server.Srv.Engine.POST("/login",doPOSTLogin)
+    server.Srv.Engine.GET("/entry/:id", doGETEntry)
 	server.Srv.Engine.POST("/entry/:id", doPOSTEntry)
 	server.Srv.Engine.POST("/markdown", doPOSTMarkdown)
-    server.Srv.Engine.POST("/entry/:id/file", doPOSTUpload)
+	server.Srv.Engine.POST("/entry/:id/file", doPOSTUpload)
 	server.Srv.Engine.GET("/file/:id", doGETFile)
 }
 
@@ -33,18 +38,22 @@ type dtoMarkdownRender struct {
 
 func doPOSTUpload(c *gin.Context) {
 
-    id := c.Param("id")
+    if ! isAuthenticated(c) {
+        return
+    }
 
-    file, fileHeader, err := c.Request.FormFile("file")
+	id := c.Param("id")
+
+	file, fileHeader, err := c.Request.FormFile("file")
 
 	if err != nil {
-        c.JSON(http.StatusBadRequest , gin.H{"error":err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	filename, err := server.Srv.Store.File.Write(fileHeader.Filename, id, file)
 	if err != nil {
-        c.JSON(http.StatusBadRequest , gin.H{"error":err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -65,12 +74,22 @@ func doPOSTUpload(c *gin.Context) {
 }
 
 func doGETFile(c *gin.Context) {
-	file := server.Srv.Store.File.Fullpath(c.Param("id"))
+
+     if ! isAuthenticated(c) {
+        return
+    }
+
+    file := server.Srv.Store.File.Fullpath(c.Param("id"))
 	c.File(file)
 }
 
 func doPOSTMarkdown(c *gin.Context) {
-	var json dtoMarkdownRender
+
+    if ! isAuthenticated(c) {
+        return
+    }
+
+    var json dtoMarkdownRender
 	if c.BindJSON(&json) == nil {
 		html := string(blackfriday.MarkdownCommon([]byte(json.Markdown)))
 		c.JSON(http.StatusOK, gin.H{"html": html})
@@ -78,6 +97,10 @@ func doPOSTMarkdown(c *gin.Context) {
 }
 
 func doGETRoot(c *gin.Context) {
+
+     if ! isAuthenticated(c) {
+        return
+    }
 
 	entries, err := server.Srv.Store.Entry.List()
 	if err != nil {
@@ -99,6 +122,36 @@ func doGETRoot(c *gin.Context) {
 	})
 }
 
+func doGETLogin(c *gin.Context) {
+
+    var err error
+
+	c.HTML(http.StatusOK, "login.tmpl", gin.H{
+		"title":   "Main website",
+		"prefix":  server.Srv.Config.Prefix,
+		"error":   err,
+	})
+}
+
+func doPOSTLogin(c *gin.Context) {
+
+    oauthtoken := c.DefaultPostForm("oauthtoken", "undefined")
+
+    err := setAuthentication(c,oauthtoken)
+    if err != nil {
+        c.HTML(http.StatusOK, "login.tmpl", gin.H{
+            "title":   "Main website",
+            "prefix":  server.Srv.Config.Prefix,
+            "error":   err,
+        })
+    } else {
+		c.Redirect(301, server.Srv.Config.Prefix+"/")
+    }
+}
+
+
+
+
 func buttonPressed(c *gin.Context, name string) bool {
 	return c.DefaultPostForm(name, "undefined") != "undefined"
 }
@@ -112,6 +165,10 @@ func dumpError(c *gin.Context, err error) {
 
 func doGETEntry(c *gin.Context) {
 
+    if ! isAuthenticated(c) {
+        return
+    }
+
 	id := c.Param("id")
 
 	var entry *model.Entry
@@ -120,13 +177,13 @@ func doGETEntry(c *gin.Context) {
 		var err error
 		entry, err = server.Srv.Store.Entry.Get(id)
 		if err != nil {
-		    dumpError(c, err)
-            return
+			dumpError(c, err)
+			return
 		}
-    } else {
-        entry = &model.Entry{
-            ID: server.Srv.Store.Entry.NewID(),
-        }
+	} else {
+		entry = &model.Entry{
+			ID: server.Srv.Store.Entry.NewID(),
+		}
 	}
 
 	c.HTML(http.StatusOK, "entry.tmpl", gin.H{
@@ -137,6 +194,10 @@ func doGETEntry(c *gin.Context) {
 }
 
 func doPOSTEntry(c *gin.Context) {
+
+    if ! isAuthenticated(c) {
+        return
+    }
 
 	if buttonPressed(c, "btnsave") {
 
@@ -160,4 +221,3 @@ func doPOSTEntry(c *gin.Context) {
 		return
 	}
 }
-
