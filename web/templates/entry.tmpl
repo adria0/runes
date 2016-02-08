@@ -47,7 +47,7 @@
   <div class="row">
     <div class="col-md-12">
 
-    <form class="form-horizontal" method="post" action="{{ .prefix }}/entry/{{ .entry.ID }}">
+    <form class="form-horizontal" method="post" action="{{ .prefix }}/entries/{{ .entry.ID }}">
     <input class="form-control input-large" id="title" name="Title" value="{{ .entry.Title }}" />
     
     <h2>Markdown</h2>
@@ -140,7 +140,7 @@ $( window ).on('unload',function() {
 });
 
 new Dropzone(document.body, { // Make the whole body a dropzone
-    url: "/entry/{{ .entry.ID }}/file",
+    url: "/entries/{{ .entry.ID }}/file",
     previewsContainer: "#previews", // Define the container to display the previews
     clickable: "#previews", // Define the element that should be used as click trigger to select files.
     addedfile: function(file) { console.log(file);  },

@@ -65,7 +65,7 @@
 
 {{ range $entry := .entries }}
   $( "#editbutton-{{ $entry.ID }}" ).click(function() {
-      window.location.href = "{{ $.prefix }}/entry/{{ $entry.ID }}";
+      window.location.href = "{{ $.prefix }}/entries/{{ $entry.ID }}";
   });
 {{ end }}
 

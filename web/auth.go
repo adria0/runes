@@ -28,7 +28,7 @@ type userinfoStruct struct {
 	VerifiedEmail bool   `json:"verified_email"`
 }
 
-func InitAuth() {
+func initAuth() {
     ticker := time.NewTicker(time.Hour)
     go func() {
         for _ = range ticker.C {
@@ -70,7 +70,7 @@ func getEmailFromOAuth2(accessToken string) (string, error) {
 	return userinfo.Email, nil
 }
 
-func IsAuthValid(c *gin.Context) bool {
+func isAuthValid(c *gin.Context) bool {
 
     validSession := func(token string) bool{
         now := time.Now().Unix()
@@ -98,14 +98,10 @@ func IsAuthValid(c *gin.Context) bool {
         }
     }
 
- 	if !valid {
-		c.Redirect(301, server.Srv.Config.Prefix+"/login")
-	}
-
     return valid
 }
 
-func DoAuth(c *gin.Context, oauthToken string) (string, error){
+func doAuth(c *gin.Context, oauthToken string) (string, error){
 
     email, err := getEmailFromOAuth2(oauthToken)
     if err != nil {

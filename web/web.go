@@ -14,19 +14,31 @@ import (
 // InitWeb Initializes the web
 func InitWeb() {
 
-    InitAuth()
+    initAuth()
 
 	server.Srv.Engine.StaticFS("/static", http.Dir("web/static"))
-
-	server.Srv.Engine.GET("/", doGETRoot)
-
     server.Srv.Engine.GET("/login",doGETLogin)
-    server.Srv.Engine.POST("/login",doPOSTLogin)
-    server.Srv.Engine.GET("/entry/:id", doGETEntry)
-	server.Srv.Engine.POST("/entry/:id", doPOSTEntry)
-	server.Srv.Engine.POST("/markdown", doPOSTMarkdown)
-	server.Srv.Engine.POST("/entry/:id/file", doPOSTUpload)
-	server.Srv.Engine.GET("/file/:id", doGETFile)
+
+    authorized := server.Srv.Engine.Group("/")
+    authorized.Use(checkAuthorization())
+
+    authorized.GET("/", doGETEntries)
+    authorized.GET("/entries", doGETEntries)
+    authorized.POST("/login",doPOSTLogin)
+    authorized.GET("/entries/:id", doGETEntry)
+	authorized.POST("/entries/:id", doPOSTEntry)
+	authorized.POST("/markdown", doPOSTMarkdown)
+	authorized.POST("/entries/:id/file", doPOSTUpload)
+	authorized.GET("/file/:id", doGETFile)
+}
+
+func checkAuthorization() gin.HandlerFunc {
+    return func (c *gin.Context) {
+        if ! isAuthValid(c) {
+            c.Redirect(301, server.Srv.Config.Prefix+"/login")
+            return
+        }
+    }
 }
 
 type tmplEntry struct {
@@ -38,10 +50,6 @@ type dtoMarkdownRender struct {
 }
 
 func doPOSTUpload(c *gin.Context) {
-
-    if ! IsAuthValid(c) {
-        return
-    }
 
 	id := c.Param("id")
 
@@ -75,21 +83,11 @@ func doPOSTUpload(c *gin.Context) {
 }
 
 func doGETFile(c *gin.Context) {
-
-     if ! IsAuthValid(c) {
-        return
-    }
-
     file := server.Srv.Store.File.Fullpath(c.Param("id"))
 	c.File(file)
 }
 
 func doPOSTMarkdown(c *gin.Context) {
-
-    if ! IsAuthValid(c) {
-        return
-    }
-
     var json dtoMarkdownRender
 	if c.BindJSON(&json) == nil {
 		html := string(blackfriday.MarkdownCommon([]byte(json.Markdown)))
@@ -97,11 +95,7 @@ func doPOSTMarkdown(c *gin.Context) {
 	}
 }
 
-func doGETRoot(c *gin.Context) {
-
-     if ! IsAuthValid(c) {
-        return
-    }
+func doGETEntries(c *gin.Context) {
 
 	entries, err := server.Srv.Store.Entry.List()
 	if err != nil {
@@ -115,8 +109,7 @@ func doGETRoot(c *gin.Context) {
 	}
 
 	err = nil
-	c.HTML(http.StatusOK, "index.tmpl", gin.H{
-		"title":   "Main website",
+	c.HTML(http.StatusOK, "entries.tmpl", gin.H{
 		"prefix":  server.Srv.Config.Prefix,
 		"entries": htmlEntries,
 		"error":   err,
@@ -128,7 +121,6 @@ func doGETLogin(c *gin.Context) {
     var err error
 
 	c.HTML(http.StatusOK, "login.tmpl", gin.H{
-		"title":   "Main website",
 		"prefix":  server.Srv.Config.Prefix,
         "googleclientid": server.Srv.Config.Auth.GoogleClientID,
         "error":   err,
@@ -139,15 +131,14 @@ func doPOSTLogin(c *gin.Context) {
 
     oauthtoken := c.DefaultPostForm("oauthtoken", "undefined")
 
-    _,err := DoAuth(c,oauthtoken)
+    _,err := doAuth(c,oauthtoken)
     if err != nil {
         c.HTML(http.StatusOK, "login.tmpl", gin.H{
-            "title":   "Main website",
             "prefix":  server.Srv.Config.Prefix,
             "error":   err,
         })
     } else {
-		c.Redirect(301, server.Srv.Config.Prefix+"/")
+		c.Redirect(301, server.Srv.Config.Prefix+"/entries")
     }
 }
 
@@ -163,11 +154,6 @@ func dumpError(c *gin.Context, err error) {
 }
 
 func doGETEntry(c *gin.Context) {
-
-    if ! IsAuthValid(c) {
-        return
-    }
-
 	id := c.Param("id")
 
 	var entry *model.Entry
@@ -194,10 +180,6 @@ func doGETEntry(c *gin.Context) {
 
 func doPOSTEntry(c *gin.Context) {
 
-    if ! IsAuthValid(c) {
-        return
-    }
-
 	if buttonPressed(c, "btnsave") {
 
 		entry := model.Entry{
@@ -211,12 +193,12 @@ func doPOSTEntry(c *gin.Context) {
 			dumpError(c, err)
 			return
 		}
-		c.Redirect(301, server.Srv.Config.Prefix+"/")
+		c.Redirect(301, server.Srv.Config.Prefix+"/entries")
 		return
 	}
 
 	if buttonPressed(c, "btnback") {
-		c.Redirect(301, server.Srv.Config.Prefix+"/")
+		c.Redirect(301, server.Srv.Config.Prefix+"/entries")
 		return
 	}
 }
