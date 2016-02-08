@@ -13,6 +13,10 @@ import (
 type Config struct {
 	Port   int
 	Prefix string
+    Auth struct {
+        GoogleClientID string
+        AllowedEmails []string
+    }
 }
 
 type Server struct {
@@ -66,3 +70,4 @@ func NewServer(config Config) {
 func StartServer() {
     Srv.Engine.Run(":" + strconv.Itoa(Srv.Config.Port))
 }
+

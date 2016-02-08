@@ -10,10 +10,11 @@ import (
 	"strings"
 )
 
+
 // InitWeb Initializes the web
 func InitWeb() {
 
-    initAuthentication()
+    InitAuth()
 
 	server.Srv.Engine.StaticFS("/static", http.Dir("web/static"))
 
@@ -38,7 +39,7 @@ type dtoMarkdownRender struct {
 
 func doPOSTUpload(c *gin.Context) {
 
-    if ! isAuthenticated(c) {
+    if ! IsAuthValid(c) {
         return
     }
 
@@ -75,7 +76,7 @@ func doPOSTUpload(c *gin.Context) {
 
 func doGETFile(c *gin.Context) {
 
-     if ! isAuthenticated(c) {
+     if ! IsAuthValid(c) {
         return
     }
 
@@ -85,7 +86,7 @@ func doGETFile(c *gin.Context) {
 
 func doPOSTMarkdown(c *gin.Context) {
 
-    if ! isAuthenticated(c) {
+    if ! IsAuthValid(c) {
         return
     }
 
@@ -98,7 +99,7 @@ func doPOSTMarkdown(c *gin.Context) {
 
 func doGETRoot(c *gin.Context) {
 
-     if ! isAuthenticated(c) {
+     if ! IsAuthValid(c) {
         return
     }
 
@@ -129,7 +130,8 @@ func doGETLogin(c *gin.Context) {
 	c.HTML(http.StatusOK, "login.tmpl", gin.H{
 		"title":   "Main website",
 		"prefix":  server.Srv.Config.Prefix,
-		"error":   err,
+        "googleclientid": server.Srv.Config.Auth.GoogleClientID,
+        "error":   err,
 	})
 }
 
@@ -137,7 +139,7 @@ func doPOSTLogin(c *gin.Context) {
 
     oauthtoken := c.DefaultPostForm("oauthtoken", "undefined")
 
-    err := setAuthentication(c,oauthtoken)
+    _,err := DoAuth(c,oauthtoken)
     if err != nil {
         c.HTML(http.StatusOK, "login.tmpl", gin.H{
             "title":   "Main website",
@@ -148,9 +150,6 @@ func doPOSTLogin(c *gin.Context) {
 		c.Redirect(301, server.Srv.Config.Prefix+"/")
     }
 }
-
-
-
 
 func buttonPressed(c *gin.Context, name string) bool {
 	return c.DefaultPostForm(name, "undefined") != "undefined"
@@ -165,7 +164,7 @@ func dumpError(c *gin.Context, err error) {
 
 func doGETEntry(c *gin.Context) {
 
-    if ! isAuthenticated(c) {
+    if ! IsAuthValid(c) {
         return
     }
 
@@ -195,7 +194,7 @@ func doGETEntry(c *gin.Context) {
 
 func doPOSTEntry(c *gin.Context) {
 
-    if ! isAuthenticated(c) {
+    if ! IsAuthValid(c) {
         return
     }
 

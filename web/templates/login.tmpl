@@ -11,7 +11,7 @@
   <script>
     function auth() {
         var config = {
-            'client_id': '503240060263-o7ahabsmc94bu0lok2qvvvs4rkl4imo9.apps.googleusercontent.com',
+            'client_id': '{{ .googleclientid  }}',
             'scope': 'https://www.googleapis.com/auth/userinfo.email'
         };
         gapi.auth.authorize(config, function() {

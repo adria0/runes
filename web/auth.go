@@ -11,6 +11,11 @@ import (
     "sync"
 )
 
+var (
+    cookies = map[string]int64{}
+    mutex   = &sync.Mutex{}
+)
+
 type userinfoStruct struct {
 	Email         string `json:"email"`
 	FamilyName    string `json:"family_name"`
@@ -23,13 +28,7 @@ type userinfoStruct struct {
 	VerifiedEmail bool   `json:"verified_email"`
 }
 
-var (
-    cookies = map[string]int64{}
-    mutex = &sync.Mutex{}
-)
-
-
-func initAuthentication() {
+func InitAuth() {
     ticker := time.NewTicker(time.Hour)
     go func() {
         for _ = range ticker.C {
@@ -47,6 +46,7 @@ func initAuthentication() {
         }
     }()
 }
+
 
 func getEmailFromOAuth2(accessToken string) (string, error) {
 	client := &http.Client{}
@@ -70,13 +70,13 @@ func getEmailFromOAuth2(accessToken string) (string, error) {
 	return userinfo.Email, nil
 }
 
-func isAuthenticated(c *gin.Context) bool {
+func IsAuthValid(c *gin.Context) bool {
 
     validSession := func(token string) bool{
         now := time.Now().Unix()
 
         mutex.Lock()
-        defer mutex.Unlock()
+        mutex.Unlock()
 
         if expires, exists := cookies[token] ; exists {
             if now > expires {
@@ -105,14 +105,22 @@ func isAuthenticated(c *gin.Context) bool {
     return valid
 }
 
-func setAuthentication(c *gin.Context, oauthToken string) error{
+func DoAuth(c *gin.Context, oauthToken string) (string, error){
 
     email, err := getEmailFromOAuth2(oauthToken)
     if err != nil {
-        return err
+        return "",err
     }
-    if email != "adriamassanet@gmail.com" {
-        return fmt.Errorf("Bad email %v",email)
+
+    var found *string
+    for _,allowed := range server.Srv.Config.Auth.AllowedEmails {
+        if email == allowed {
+            found = &allowed
+            break
+        }
+    }
+    if found == nil {
+        return "",fmt.Errorf("Bad email %v",email)
     }
 
     token128 := fmt.Sprintf("%x%x%x%x",
@@ -126,7 +134,7 @@ func setAuthentication(c *gin.Context, oauthToken string) error{
     cookie := http.Cookie{Name: "token", Value: token128}
 	http.SetCookie(c.Writer, &cookie)
 
-    return nil
+    return *found, nil
 }
 
 
