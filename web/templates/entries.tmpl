@@ -22,9 +22,7 @@
   h1 {
     margin-top: 5px;
     margin-bottom: 5px;    
-    text-align: center;
-    color: #FFF;
-    font-family: 'Slabo 27px', serif;
+    color: #3399ff;
   }
   h2 {
     margin-top: 5px;
@@ -41,7 +39,7 @@
  {{ range $entry := .entries }}
     <div class="row">
       <div class="col-sm-12" id="text">
-          <h2>{{ $entry.Title }}</h2>
+          <h1>{{ $entry.Title }}</h1>
           {{ $entry.Markdown | markdown }}
           <a id="editbutton-{{ $entry.ID }}" href="#" class="btn btn-default pull-right">Edit</a>
         </div>
