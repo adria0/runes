@@ -10,6 +10,7 @@ import (
 	"time"
     "errors"
     "fmt"
+    "sort"
 )
 
 const (
@@ -163,6 +164,19 @@ func (es *EntryStore) getFilenameForID(ID string) (string, error) {
 	return "", errNotExists
 }
 
+type FileInfos []os.FileInfo
+
+func (fi FileInfos) Len() int {
+    return len(fi)
+}
+func (fi FileInfos) Swap(i, j int) {
+    fi[i], fi[j] = fi[j], fi[i]
+}
+
+func (fi FileInfos) Less(i, j int) bool {
+    return strings.ToLower(fi[i].Name()) > strings.ToLower(fi[j].Name())
+}
+
 func (es *EntryStore) List() ([]*model.Entry, error) {
 
 	fileInfos, err := ioutil.ReadDir(es.path + entriesPath)
@@ -170,6 +184,8 @@ func (es *EntryStore) List() ([]*model.Entry, error) {
 	if err != nil {
 		return nil, err
 	}
+
+    sort.Sort(FileInfos(fileInfos))
 
 	entries := make([]*model.Entry, 0, len(fileInfos))
 
