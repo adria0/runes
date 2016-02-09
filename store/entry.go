@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
     "errors"
+    "fmt"
 )
 
 const (
@@ -40,7 +41,7 @@ func NewEntryStore(config Config) *EntryStore {
 
 func (es *EntryStore) add(entry *model.Entry) error {
 
-	filename := replaceFilenameChars(entry.Title) + "_" + entry.ID
+	filename := entry.ID + "_" + replaceFilenameChars(entry.Title)
     txtPath := es.path+entriesPath+filename+txtExt
     jsonPath := es.path+entriesPath+filename+jsonExt
 
@@ -148,12 +149,13 @@ func (es *EntryStore) getFilenameForID(ID string) (string, error) {
 		return "", err
 	}
 
-	suffix := "_" + ID + txtExt
+    prefix := ID + "_"
+    suffix := txtExt
 	for _, fileInfo := range fileInfos {
 		if !fileInfo.IsDir() {
 			name := fileInfo.Name()
-			if strings.HasSuffix(name, suffix) {
-				return name[:len(name)-len(txtExt)], nil
+			if strings.HasPrefix(name,prefix) && strings.HasSuffix(name, suffix) {
+				return name[:len(name)-len(suffix)], nil
 			}
 		}
 	}
@@ -174,7 +176,11 @@ func (es *EntryStore) List() ([]*model.Entry, error) {
 	for _, fileInfo := range fileInfos {
 		if !fileInfo.IsDir() && strings.HasSuffix(fileInfo.Name(), txtExt) {
 			name := fileInfo.Name()
-			entry, err := es.get(name[:len(name)-len(txtExt)])
+            pos := strings.Index(name,".")
+            if pos == -1 {
+                return nil,fmt.Errorf("Bad filename %v",name)
+            }
+            entry, err := es.get(name[:pos])
 			if err != nil {
 				return nil, err
 			}
