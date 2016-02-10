@@ -1,0 +1,41 @@
+hr {
+    margin-top: 5px;
+    margin-bottom: 5px;    
+}
+h1 {
+    margin-top: 5px;
+    margin-bottom: 5px;    
+    color: #3399ff;
+}
+h2 {
+    margin-top: 5px;
+    margin-bottom: 5px;    
+}
+
+#editor { 
+    position: relative;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+.top-buffer { margin-top:20px;  }
+
+.input-large {
+    height: 44px !important;
+    margin-bottom: 10px !important;
+    line-height: 30px !important;
+    padding: 11px 19px !important;
+    font-size: 30px !important;
+    -webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
+    border-radius: 6px;
+}
+
+img[alt="scale"] {
+    max-width: 100%;
+}
+
+
+

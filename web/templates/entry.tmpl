@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="{{ .prefix  }}/static/css/bootstrap.min.css">
   <link rel="stylesheet" href="{{ .prefix  }}/static/css/dropzone.min.css">
+  <link rel="stylesheet" href="{{ .prefix  }}/static/css/style.css">
   <script src="{{ .prefix  }}/static/js/jquery.min.js"></script>
   <script src="{{ .prefix  }}/static/js/bootstrap.min.js"></script>
   <script src="{{ .prefix  }}/static/js/ace.js" type="text/javascript" charset="utf-8"></script>
@@ -14,32 +15,6 @@
 </head>
 
 <body id="droparea">
-
-<style type="text/css" media="screen">
-
-#editor { 
-    position: relative;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-}
-
-.top-buffer { margin-top:20px;  }
-
-.input-large {
-    height: 44px !important;
-    margin-bottom: 10px !important;
-    line-height: 30px !important;
-    padding: 11px 19px !important;
-    font-size: 30px !important;
-    -webkit-border-radius: 6px;
-    -moz-border-radius: 6px;
-    border-radius: 6px;
-}
-
-
-</style>
 
 {{ template "menu.tmpl" }}
 
