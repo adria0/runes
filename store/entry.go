@@ -11,6 +11,7 @@ import (
     "errors"
     "fmt"
     "sort"
+    "regexp"
 )
 
 const (
@@ -192,3 +193,60 @@ func (es *EntryStore) List() ([]*model.Entry, error) {
 	}
 	return entries[:], nil
 }
+
+type SearchResult struct {
+    ID string
+    Title string
+    Matches []string
+}
+
+func (es *EntryStore) Search(expr string) ( []SearchResult, error) {
+
+    rg,err := regexp.Compile(expr)
+	if err != nil {
+		return nil, err
+	}
+
+	fileInfos, err := ioutil.ReadDir(es.path + entriesPath)
+
+	if err != nil {
+		return nil, err
+	}
+
+    sort.Sort(FileInfos(fileInfos))
+
+	results := []SearchResult{}
+
+	for _, fileInfo := range fileInfos {
+
+        if !fileInfo.IsDir() && strings.HasSuffix(fileInfo.Name(), txtExt) {
+
+            name := fileInfo.Name()
+            pos := strings.Index(name,".")
+            if pos == -1 {
+                return nil,fmt.Errorf("Bad filename %v",name)
+            }
+
+            entry, err := es.get(name[:pos])
+			if err != nil {
+				return nil, err
+			}
+
+            matches := []string{}
+            lines := strings.Split(entry.Markdown,"\n")
+            for _,line := range lines {
+                if rg.MatchString(line) {
+                    matches = append (matches, line)
+                }
+            }
+
+            if len(matches) > 0 {
+                results = append(results,
+                    SearchResult{entry.ID,entry.Title,matches})
+            }
+		}
+	}
+	return results, nil
+}
+
+

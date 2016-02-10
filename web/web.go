@@ -31,6 +31,7 @@ func InitWeb() {
 	authorized.POST("/entries/:id/files", doPOSTUpload)
 	authorized.GET("/files/:id", doGETFile)
     authorized.GET("/files",doGETFiles)
+    authorized.POST("/search",doPOSTSearch)
 }
 
 func checkAuthorization() gin.HandlerFunc {
@@ -49,6 +50,31 @@ type tmplEntry struct {
 type dtoMarkdownRender struct {
 	Markdown string `json:"markdown" binding:"required"`
 }
+
+func doPOSTSearch(c *gin.Context) {
+
+    query:= c.Request.FormValue("query")
+    results,err := server.Srv.Store.Entry.Search(query)
+	if err != nil {
+		c.HTML(http.StatusOK, "search.tmpl", gin.H{
+		"prefix":  server.Srv.Config.Prefix,
+		"error": err,
+	    })
+        return
+    }
+	if len(results) == 0 {
+		c.HTML(http.StatusOK, "search.tmpl", gin.H{
+		"prefix":  server.Srv.Config.Prefix,
+		"info": "No results",
+	    })
+        return
+    }
+	c.HTML(http.StatusOK, "search.tmpl", gin.H{
+		"prefix":  server.Srv.Config.Prefix,
+		"results": results,
+	})
+}
+
 
 func doPOSTUpload(c *gin.Context) {
 
