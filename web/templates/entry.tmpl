@@ -124,7 +124,7 @@ $( window ).on('unload',function() {
 });
 
 new Dropzone(document.body, { // Make the whole body a dropzone
-    url: "/entries/{{ .entry.ID }}/file",
+    url: "/entries/{{ .entry.ID }}/files",
     previewsContainer: "#previews", // Define the container to display the previews
     clickable: "#previews", // Define the element that should be used as click trigger to select files.
     addedfile: function(file) { console.log(file);  },

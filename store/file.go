@@ -3,9 +3,11 @@ package store
 import (
 	"fmt"
 	"io"
-	"log"
+	"io/ioutil"
+    "log"
 	"os"
     "errors"
+    "sort"
 )
 
 const (
@@ -54,3 +56,22 @@ func (fs *FileStore) Fullpath(filename string) string {
 	return fs.path + filesPath + filename
 }
 
+func (fs *FileStore) List() ([]string,error) {
+
+	fileInfos, err := ioutil.ReadDir(fs.path + filesPath)
+
+    if err != nil {
+		return nil, err
+	}
+
+    sort.Sort(FileInfos(fileInfos))
+
+	files := make([]string, 0, len(fileInfos))
+
+	for _, fileInfo := range fileInfos {
+		if !fileInfo.IsDir() {
+			files = append(files,  fileInfo.Name())
+		}
+	}
+	return files, nil
+}

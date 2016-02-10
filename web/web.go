@@ -28,8 +28,9 @@ func InitWeb() {
     authorized.GET("/entries/:id", doGETEntry)
 	authorized.POST("/entries/:id", doPOSTEntry)
 	authorized.POST("/markdown", doPOSTMarkdown)
-	authorized.POST("/entries/:id/file", doPOSTUpload)
-	authorized.GET("/file/:id", doGETFile)
+	authorized.POST("/entries/:id/files", doPOSTUpload)
+	authorized.GET("/files/:id", doGETFile)
+    authorized.GET("/files",doGETFiles)
 }
 
 func checkAuthorization() gin.HandlerFunc {
@@ -66,7 +67,7 @@ func doPOSTUpload(c *gin.Context) {
 		return
 	}
 
-	path := server.Srv.Config.Prefix + "/file/" + filename
+	path := server.Srv.Config.Prefix + "/files/" + filename
 	split := strings.Split(filename, ".")
 	ext := split[len(split)-1]
 	ico := ""
@@ -115,6 +116,22 @@ func doGETEntries(c *gin.Context) {
 		"error":   err,
 	})
 }
+
+func doGETFiles(c *gin.Context) {
+
+	files, err := server.Srv.Store.File.List()
+	if err != nil {
+		dumpError(c, err)
+		return
+	}
+
+	c.HTML(http.StatusOK, "files.tmpl", gin.H{
+		"prefix":  server.Srv.Config.Prefix,
+		"files": files,
+	})
+}
+
+
 
 func doGETLogin(c *gin.Context) {
 
