@@ -52,7 +52,8 @@
 
 <script>
 
-var localStorageDraft = "edit-{{ .entry.ID }}-value";
+var localStorageDraft = "draft";
+var localStorageOldDraft ="olddraft"
 var originalMarkdown = "{{ .entry.Markdown }}"
 var updateMarkdownTimeout = undefined
 
@@ -60,6 +61,14 @@ var editor = ace.edit("editor");
 editor.setTheme("ace/theme/github");
 editor.getSession().setMode("ace/mode/markdown");
 editor.setValue(originalMarkdown)
+
+draft = localStorage[localStorageDraft]
+if (draft != undefined){
+    if (confirm('Unsaved draft found. Recover it?')) {
+        editor.setValue(draft, -1) // moves cursor to the start
+        editor.setValue(draft, 1) // moves cursor to the end
+    }
+}
 editor.$blockScrolling = Infinity
 
 function updateMarkdownTimer() {
@@ -131,8 +140,10 @@ new Dropzone(document.body, { // Make the whole body a dropzone
         }
         editor.insert(markdown);
     }
-
 });
+
+
+
 
 </script>
 
