@@ -53,7 +53,7 @@
 <script>
 
 var localStorageDraft = "draft";
-var localStorageOldDraft ="olddraft"
+var localStorageOldDraft ="changed"
 var originalMarkdown = "{{ .entry.Markdown }}"
 var updateMarkdownTimeout = undefined
 
@@ -78,8 +78,10 @@ function updateMarkdownTimer() {
     updateMarkdownTimeout = window.setTimeout(renderMarkdown, 2000)
 }
 
-var heightUpdateFunction = function() {
-  localStorage[localStorageDraft]=editor.getValue()
+var onMarkdownChanged = function() {
+  if (editor.getValue() != originalMarkdown){
+    localStorage[localStorageDraft]=editor.getValue()
+  }
   var newHeight =editor.getSession().getScreenLength()* editor.renderer.lineHeight
   $('#editor').height(newHeight.toString() + "px");
   $('#editor-section').height(newHeight.toString() + "px");
@@ -88,8 +90,8 @@ var heightUpdateFunction = function() {
 };
 
 // Set initial size to match initial content
-heightUpdateFunction();
-editor.getSession().on('change', heightUpdateFunction);
+onMarkdownChanged();
+editor.getSession().on('change', onMarkdownChanged);
 
 $( "#btnsave" ).click(function() {
     $("#markdown").val(editor.getValue())
@@ -113,14 +115,17 @@ function renderMarkdown (  ) {
 }
 
 $( window ).on('beforeunload',function() {
-  draft = localStorage[localStorageDraft] 
-  if (draft != undefined && draft != originalMarkdown){
-    return "Entry not saved, discard?"
-  }
-});
-
-$( window ).on('unload',function() {
-  localStorage.removeItem(localStorageDraft)
+    draft = localStorage[localStorageDraft] 
+    localStorage.removeItem(localStorageDraft)
+    if (draft != undefined){
+        var temp = draft
+        setTimeout(function() {
+            setTimeout(function() {
+                 localStorage[localStorageDraft] = temp
+            }, 1000);
+        },1);
+        return "Entry not saved, discard?"
+    }
 });
 
 new Dropzone(document.body, { // Make the whole body a dropzone
