@@ -38,12 +38,14 @@
 <div class="container">
  {{ range $entry := .entries }}
     <div class="row">
-      <div class="col-sm-12" id="text">
+      <div class="col-lg-2 col-md-1 col-sm-1"></div>
+      <div class="col-lg-8 col-md-10 col-sm-10" id="text">
           <h1>{{ $entry.Title }}</h1>
           {{ $entry.Markdown | markdown }}
           <a id="editbutton-{{ $entry.ID }}" href="#" class="btn btn-default pull-right">Edit</a>
         </div>
       </div>
+      <div class="col-lg-2 col-md-1 col-sm-1"></div>
     <hr />
   {{ end }}
 
