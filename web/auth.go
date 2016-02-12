@@ -2,18 +2,18 @@ package web
 
 import (
 	"encoding/json"
-	"net/http"
 	"fmt"
 	"github.com/amassanet/gopad/server"
 	"github.com/gin-gonic/gin"
-    "math/rand"
-    "time"
-    "sync"
+	"math/rand"
+	"net/http"
+	"sync"
+	"time"
 )
 
 var (
-    cookies = map[string]int64{}
-    mutex   = &sync.Mutex{}
+	cookies = map[string]int64{}
+	mutex   = &sync.Mutex{}
 )
 
 type userinfoStruct struct {
@@ -29,24 +29,23 @@ type userinfoStruct struct {
 }
 
 func initAuth() {
-    ticker := time.NewTicker(time.Hour)
-    go func() {
-        for _ = range ticker.C {
-            now := time.Now().Unix()
+	ticker := time.NewTicker(time.Hour)
+	go func() {
+		for _ = range ticker.C {
+			now := time.Now().Unix()
 
-            mutex.Lock()
+			mutex.Lock()
 
-            for k,expires := range cookies {
-                if now > expires {
-                    delete(cookies,k)
-                    fmt.Println("Removed", k)
-                }
-            }
-            mutex.Unlock()
-        }
-    }()
+			for k, expires := range cookies {
+				if now > expires {
+					delete(cookies, k)
+					fmt.Println("Removed", k)
+				}
+			}
+			mutex.Unlock()
+		}
+	}()
 }
-
 
 func getEmailFromOAuth2(accessToken string) (string, error) {
 	client := &http.Client{}
@@ -72,65 +71,63 @@ func getEmailFromOAuth2(accessToken string) (string, error) {
 
 func isAuthValid(c *gin.Context) bool {
 
-    validSession := func(token string) bool{
-        now := time.Now().Unix()
+	validSession := func(token string) bool {
+		now := time.Now().Unix()
 
-        mutex.Lock()
-        mutex.Unlock()
+		mutex.Lock()
+		mutex.Unlock()
 
-        if expires, exists := cookies[token] ; exists {
-            if now > expires {
-                delete(cookies,token)
-                return false
-            }
-            return true
-        }
-        return false
+		if expires, exists := cookies[token]; exists {
+			if now > expires {
+				delete(cookies, token)
+				return false
+			}
+			return true
+		}
+		return false
 
-    }
+	}
 
-    valid := false
+	valid := false
 
-    for _, cookie := range c.Request.Cookies() {
-        if cookie.Name == "token" {
-            valid = validSession(cookie.Value)
-            break
-        }
-    }
+	for _, cookie := range c.Request.Cookies() {
+		if cookie.Name == "token" {
+			valid = validSession(cookie.Value)
+			break
+		}
+	}
 
-    return valid
+	return valid
 }
 
-func doAuth(c *gin.Context, oauthToken string) (string, error){
+func doAuth(c *gin.Context, oauthToken string) (string, error) {
 
-    email, err := getEmailFromOAuth2(oauthToken)
-    if err != nil {
-        return "",err
-    }
+	email, err := getEmailFromOAuth2(oauthToken)
+	if err != nil {
+		return "", err
+	}
 
-    var found *string
-    for _,allowed := range server.Srv.Config.Auth.AllowedEmails {
-        if email == allowed {
-            found = &allowed
-            break
-        }
-    }
-    if found == nil {
-        return "",fmt.Errorf("Bad email %v",email)
-    }
+	var found *string
+	for _, allowed := range server.Srv.Config.Auth.AllowedEmails {
+		if email == allowed {
+			found = &allowed
+			break
+		}
+	}
+	if found == nil {
+		return "", fmt.Errorf("Bad email %v", email)
+	}
 
-    token128 := fmt.Sprintf("%x%x%x%x",
-        rand.Uint32(),rand.Uint32(),rand.Uint32(), rand.Uint32())
-    expires := time.Now().Unix() + 7*24*3600
+	token128 := fmt.Sprintf("%x%x%x%x",
+		rand.Uint32(), rand.Uint32(), rand.Uint32(), rand.Uint32())
+	expires := time.Now().Unix() + 7*24*3600
 
-    mutex.Lock()
-    cookies[token128]=expires
-    mutex.Unlock()
+	mutex.Lock()
+	cookies[token128] = expires
+	mutex.Unlock()
 
-    cookie := http.Cookie{Name: "token", Value: token128}
+	cookie := http.Cookie{Name: "token", Value: token128}
 	http.SetCookie(c.Writer, &cookie)
 
-    return *found, nil
+	return *found, nil
 }
-
-

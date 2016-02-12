@@ -1,15 +1,15 @@
 hr {
     margin-top: 5px;
-    margin-bottom: 5px;    
+    margin-bottom: 5px;
 }
 h1 {
     margin-top: 5px;
-    margin-bottom: 5px;    
+    margin-bottom: 5px;
     color: #3399ff;
 }
 h2 {
     margin-top: 5px;
-    margin-bottom: 5px;    
+    margin-bottom: 5px;
 }
 
 #editor { 
@@ -33,18 +33,11 @@ h2 {
     border-radius: 6px;
 }
 
-img[alt=""] { max-width: 100%; }
-
-img[alt="scale"] { max-width: 100%; }
-
-img[alt="100px"] { max-width: 100px; }
-
-img[alt="200px"] { max-width: 200px; }
-
-img[alt="300px"] { max-width: 300px; }
-
-img[alt="400px"] { max-width: 400px; }
-
-img[alt="500px"] { max-width: 500px; }
-
-img[alt="600px"] { max-width: 600px; }
+img[alt=""]      { max-width: 100%;  max-height: 400px; }
+img[alt="scale"] { max-width: 100%;  max-height: 400px; }
+img[alt="100px"] { max-width: 100px; max-height: 400px; }
+img[alt="200px"] { max-width: 200px; max-height: 400px; }
+img[alt="300px"] { max-width: 300px; max-height: 400px; }
+img[alt="400px"] { max-width: 400px; max-height: 400px; }
+img[alt="500px"] { max-width: 500px; max-height: 400px; }
+img[alt="600px"] { max-width: 600px; max-height: 400px; }

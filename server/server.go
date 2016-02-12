@@ -2,8 +2,8 @@ package server
 
 import (
 	"github.com/amassanet/gopad/store"
+	"github.com/amassanet/gopad/web/render"
 	"github.com/gin-gonic/gin"
-	"github.com/russross/blackfriday"
 	"html/template"
 	"strconv"
     "os/user"
@@ -27,15 +27,15 @@ type Server struct {
 
 var Srv *Server
 
-var funcName = template.FuncMap{
+var markdownRender = template.FuncMap{
 	"markdown": func(s string) template.HTML {
-		proc := string(blackfriday.MarkdownCommon([]byte(s)))
+		proc := string(render.Render(s))
 		return template.HTML(proc)
 	},
 }
 
 func templateReloader(c *gin.Context) {
-	if tmpl, err := template.New("name").Funcs(funcName).ParseGlob("web/templates/*"); err == nil {
+	if tmpl, err := template.New("name").Funcs(markdownRender).ParseGlob("web/templates/*"); err == nil {
 		Srv.Engine.SetHTMLTemplate(tmpl)
 	} else {
 		panic(err)
@@ -43,6 +43,8 @@ func templateReloader(c *gin.Context) {
 }
 
 func NewServer(config Config) {
+
+    store.InitCache()
 
 	g := gin.New()
 	g.Use(templateReloader, gin.Logger(), gin.Recovery())
@@ -52,7 +54,7 @@ func NewServer(config Config) {
 		Config: config,
 	}
 
-	if tmpl, err := template.New("name").Funcs(funcName).ParseGlob("web/templates/*"); err == nil {
+	if tmpl, err := template.New("name").Funcs(markdownRender ).ParseGlob("web/templates/*"); err == nil {
 		server.Engine.SetHTMLTemplate(tmpl)
 	} else {
 		panic(err)

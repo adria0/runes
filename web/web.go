@@ -1,46 +1,47 @@
 package web
 
 import (
-	"github.com/amassanet/gopad/model"
+    "github.com/amassanet/gopad/model"
+    "github.com/amassanet/gopad/store"
 	"github.com/amassanet/gopad/server"
+	"github.com/amassanet/gopad/web/render"
 	"github.com/gin-gonic/gin"
-	"github.com/russross/blackfriday"
 	"net/http"
 	"os"
 	"strings"
 )
 
-
 // InitWeb Initializes the web
 func InitWeb() {
 
-    initAuth()
+	initAuth()
 
 	server.Srv.Engine.StaticFS("/static", http.Dir("web/static"))
-    server.Srv.Engine.GET("/login",doGETLogin)
+	server.Srv.Engine.GET("/login", doGETLogin)
 
-    authorized := server.Srv.Engine.Group("/")
-    authorized.Use(checkAuthorization())
+	authorized := server.Srv.Engine.Group("/")
+	authorized.Use(checkAuthorization())
 
-    authorized.GET("/", doGETEntries)
-    authorized.GET("/entries", doGETEntries)
-    authorized.POST("/login",doPOSTLogin)
-    authorized.GET("/entries/:id", doGETEntry)
+	authorized.GET("/", doGETEntries)
+	authorized.GET("/entries", doGETEntries)
+	authorized.POST("/login", doPOSTLogin)
+	authorized.GET("/entries/:id", doGETEntry)
 	authorized.POST("/entries/:id", doPOSTEntry)
 	authorized.POST("/markdown", doPOSTMarkdown)
 	authorized.POST("/entries/:id/files", doPOSTUpload)
 	authorized.GET("/files/:id", doGETFile)
-    authorized.GET("/files",doGETFiles)
-    authorized.POST("/search",doPOSTSearch)
+	authorized.GET("/files", doGETFiles)
+	authorized.GET("/cache/:id", doGETCache)
+    authorized.POST("/search", doPOSTSearch)
 }
 
 func checkAuthorization() gin.HandlerFunc {
-    return func (c *gin.Context) {
-        if ! isAuthValid(c) {
-            c.Redirect(301, server.Srv.Config.Prefix+"/login")
-            return
-        }
-    }
+	return func(c *gin.Context) {
+		if !isAuthValid(c) {
+			c.Redirect(301, server.Srv.Config.Prefix+"/login")
+			return
+		}
+	}
 }
 
 type tmplEntry struct {
@@ -53,28 +54,27 @@ type dtoMarkdownRender struct {
 
 func doPOSTSearch(c *gin.Context) {
 
-    query:= c.Request.FormValue("query")
-    results,err := server.Srv.Store.Entry.Search(query)
+	query := c.Request.FormValue("query")
+	results, err := server.Srv.Store.Entry.Search(query)
 	if err != nil {
 		c.HTML(http.StatusOK, "search.tmpl", gin.H{
-		"prefix":  server.Srv.Config.Prefix,
-		"error": err,
-	    })
-        return
-    }
+			"prefix": server.Srv.Config.Prefix,
+			"error":  err,
+		})
+		return
+	}
 	if len(results) == 0 {
 		c.HTML(http.StatusOK, "search.tmpl", gin.H{
-		"prefix":  server.Srv.Config.Prefix,
-		"info": "No results",
-	    })
-        return
-    }
+			"prefix": server.Srv.Config.Prefix,
+			"info":   "No results",
+		})
+		return
+	}
 	c.HTML(http.StatusOK, "search.tmpl", gin.H{
 		"prefix":  server.Srv.Config.Prefix,
 		"results": results,
 	})
 }
-
 
 func doPOSTUpload(c *gin.Context) {
 
@@ -110,14 +110,19 @@ func doPOSTUpload(c *gin.Context) {
 }
 
 func doGETFile(c *gin.Context) {
-    file := server.Srv.Store.File.Fullpath(c.Param("id"))
+	file := server.Srv.Store.File.Fullpath(c.Param("id"))
+	c.File(file)
+}
+
+func doGETCache(c *gin.Context) {
+	file := store.GetCachePath(c.Param("id"))
 	c.File(file)
 }
 
 func doPOSTMarkdown(c *gin.Context) {
-    var json dtoMarkdownRender
+	var json dtoMarkdownRender
 	if c.BindJSON(&json) == nil {
-		html := string(blackfriday.MarkdownCommon([]byte(json.Markdown)))
+		html := string(render.Render(json.Markdown))
 		c.JSON(http.StatusOK, gin.H{"html": html})
 	}
 }
@@ -152,37 +157,35 @@ func doGETFiles(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "files.tmpl", gin.H{
-		"prefix":  server.Srv.Config.Prefix,
-		"files": files,
+		"prefix": server.Srv.Config.Prefix,
+		"files":  files,
 	})
 }
 
-
-
 func doGETLogin(c *gin.Context) {
 
-    var err error
+	var err error
 
 	c.HTML(http.StatusOK, "login.tmpl", gin.H{
-		"prefix":  server.Srv.Config.Prefix,
-        "googleclientid": server.Srv.Config.Auth.GoogleClientID,
-        "error":   err,
+		"prefix":         server.Srv.Config.Prefix,
+		"googleclientid": server.Srv.Config.Auth.GoogleClientID,
+		"error":          err,
 	})
 }
 
 func doPOSTLogin(c *gin.Context) {
 
-    oauthtoken := c.DefaultPostForm("oauthtoken", "undefined")
+	oauthtoken := c.DefaultPostForm("oauthtoken", "undefined")
 
-    _,err := doAuth(c,oauthtoken)
-    if err != nil {
-        c.HTML(http.StatusOK, "login.tmpl", gin.H{
-            "prefix":  server.Srv.Config.Prefix,
-            "error":   err,
-        })
-    } else {
+	_, err := doAuth(c, oauthtoken)
+	if err != nil {
+		c.HTML(http.StatusOK, "login.tmpl", gin.H{
+			"prefix": server.Srv.Config.Prefix,
+			"error":  err,
+		})
+	} else {
 		c.Redirect(301, server.Srv.Config.Prefix+"/entries")
-    }
+	}
 }
 
 func buttonPressed(c *gin.Context, name string) bool {
