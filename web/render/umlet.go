@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/amassanet/gopad/store"
+	"html/template"
 	"os/exec"
-    "html/template"
 )
 
 func filenameUmlet(ID string) string {
@@ -13,19 +13,19 @@ func filenameUmlet(ID string) string {
 }
 
 type xmlTemplate struct {
-    Type string
-    X int
-    Y int
-    W int
-    H int
-    Code string
+	Type string
+	X    int
+	Y    int
+	W    int
+	H    int
+	Code string
 }
 
 var (
-    diagramTypes = map[string]string {
-        "sequence":"UMLSequenceAllInOne",
-        "class" : "UMLClass",
-    }
+	diagramTypes = map[string]string{
+		"sequence": "UMLSequenceAllInOne",
+		"class":    "UMLClass",
+	}
 )
 
 const xmltemplate = `
@@ -47,39 +47,39 @@ const xmltemplate = `
 
 func renderUmlet(filename string, params string, data []byte) error {
 
-    umltype, found := diagramTypes[params]
-    if !found {
-        return fmt.Errorf("Bad type "+params)
-    }
+	umltype, found := diagramTypes[params]
+	if !found {
+		return fmt.Errorf("Bad type " + params)
+	}
 
-    tparams := xmlTemplate{
-        Type: umltype,
-        X:0, Y:0, W:200, H:400,
-        Code:string(data),
-    }
+	tparams := xmlTemplate{
+		Type: umltype,
+		X:    0, Y: 0, W: 200, H: 400,
+		Code: string(data),
+	}
 
-    tmpl, err := template.New("test").Parse(xmltemplate)
-    if err != nil {
+	tmpl, err := template.New("test").Parse(xmltemplate)
+	if err != nil {
 		return fmt.Errorf("%v", err)
 	}
 
-    var b bytes.Buffer
-    err = tmpl.Execute(&b,tparams)
-    if err != nil {
+	var b bytes.Buffer
+	err = tmpl.Execute(&b, tparams)
+	if err != nil {
 		return fmt.Errorf("%v", err)
 	}
 
-    uxffile, err := store.WriteTemp("temp.uxf", b.Bytes())
+	uxffile, err := store.WriteTemp("temp.uxf", b.Bytes())
 	if err != nil {
 		return fmt.Errorf("%v", err)
 	}
 	pngfile := store.GetCachePath(filename)
 
 	cmd := exec.Command(
-        "java", "-jar", "external/umlet/umlet.jar",
-        "-action=convert", "-format=png",
-        "-filename="+uxffile, "-output="+pngfile,
-    )
+		"java", "-jar", "external/umlet/umlet.jar",
+		"-action=convert", "-format=png",
+		"-filename="+uxffile, "-output="+pngfile,
+	)
 
 	var out bytes.Buffer
 	cmd.Stderr = &out
@@ -90,4 +90,3 @@ func renderUmlet(filename string, params string, data []byte) error {
 	return nil
 
 }
-

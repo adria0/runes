@@ -1,9 +1,9 @@
 package web
 
 import (
-    "github.com/amassanet/gopad/model"
-    "github.com/amassanet/gopad/store"
+	"github.com/amassanet/gopad/model"
 	"github.com/amassanet/gopad/server"
+	"github.com/amassanet/gopad/store"
 	"github.com/amassanet/gopad/web/render"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -32,7 +32,7 @@ func InitWeb() {
 	authorized.GET("/files/:id", doGETFile)
 	authorized.GET("/files", doGETFiles)
 	authorized.GET("/cache/:id", doGETCache)
-    authorized.POST("/search", doPOSTSearch)
+	authorized.POST("/search", doPOSTSearch)
 }
 
 func checkAuthorization() gin.HandlerFunc {

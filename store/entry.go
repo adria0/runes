@@ -2,35 +2,36 @@ package store
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/amassanet/gopad/model"
 	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
+	"sort"
 	"strings"
 	"time"
-    "errors"
-    "fmt"
-    "sort"
-    "regexp"
 )
 
 const (
-    oldentriesPath = "/entries/old/"
+	oldentriesPath = "/entries/old/"
 	entriesPath    = "/entries/"
 	jsonExt        = ".json"
 	mdExt          = ".md"
-    dateTimeFormat  = "20060102150405"
+	dateTimeFormat = "20060102150405"
 )
 
 var (
-    errNotExists = errors.New("File does not exist")
+	errNotExists = errors.New("File does not exist")
 )
 
-
+// EntryStore is the store for entries
 type EntryStore struct {
 	Config
 }
 
+// NewEntryStore creates a new entry store
 func NewEntryStore(config Config) *EntryStore {
 	if err := os.MkdirAll(config.path+entriesPath, 0744); err != nil {
 		log.Fatalf("Cannot create folder %v", err)
@@ -44,15 +45,15 @@ func NewEntryStore(config Config) *EntryStore {
 func (es *EntryStore) add(entry *model.Entry) error {
 
 	filename := entry.ID + "_" + replaceFilenameChars(entry.Title)
-    txtPath := es.path+entriesPath+filename+mdExt
-    jsonPath := es.path+entriesPath+filename+jsonExt
+	txtPath := es.path + entriesPath + filename + mdExt
+	jsonPath := es.path + entriesPath + filename + jsonExt
 
-    if _, err := os.Stat(txtPath); err == nil {
-        panic("Oops, cannot override files!")
-    }
-    if _, err := os.Stat(jsonPath); err == nil {
-        panic("Oops, cannot override files!")
-    }
+	if _, err := os.Stat(txtPath); err == nil {
+		panic("Oops, cannot override files!")
+	}
+	if _, err := os.Stat(jsonPath); err == nil {
+		panic("Oops, cannot override files!")
+	}
 
 	err := ioutil.WriteFile(txtPath, []byte(entry.Markdown), 0644)
 
@@ -74,31 +75,33 @@ func (es *EntryStore) add(entry *model.Entry) error {
 	return nil
 }
 
+// NewID creates a new entry identifier
 func (es *EntryStore) NewID() string {
 
 	return time.Now().Format(dateTimeFormat)
 
 }
 
+// Store adds a new entry
 func (es *EntryStore) Store(entry *model.Entry) error {
 
 	filename, err := es.getFilenameForID(entry.ID)
 
-    if err != nil && err != errNotExists {
+	if err != nil && err != errNotExists {
 		return err
 	}
 
-    if err == nil {
-        now := time.Now().Format(dateTimeFormat)
-        os.Rename(
-            es.path+entriesPath+filename+mdExt,
-            es.path+oldentriesPath+filename+"_"+now+mdExt,
-        )
-        os.Rename(
-            es.path+entriesPath+filename+jsonExt,
-            es.path+oldentriesPath+filename+"_"+now+jsonExt,
-        )
-    }
+	if err == nil {
+		now := time.Now().Format(dateTimeFormat)
+		os.Rename(
+			es.path+entriesPath+filename+mdExt,
+			es.path+oldentriesPath+filename+"_"+now+mdExt,
+		)
+		os.Rename(
+			es.path+entriesPath+filename+jsonExt,
+			es.path+oldentriesPath+filename+"_"+now+jsonExt,
+		)
+	}
 
 	err = es.add(entry)
 	if err != nil {
@@ -129,6 +132,7 @@ func (es *EntryStore) get(filename string) (*model.Entry, error) {
 	return &entry, nil
 }
 
+// Get retrieves the specified entry
 func (es *EntryStore) Get(ID string) (*model.Entry, error) {
 
 	filename, err := es.getFilenameForID(ID)
@@ -151,12 +155,12 @@ func (es *EntryStore) getFilenameForID(ID string) (string, error) {
 		return "", err
 	}
 
-    prefix := ID + "_"
-    suffix := mdExt
+	prefix := ID + "_"
+	suffix := mdExt
 	for _, fileInfo := range fileInfos {
 		if !fileInfo.IsDir() {
 			name := fileInfo.Name()
-			if strings.HasPrefix(name,prefix) && strings.HasSuffix(name, suffix) {
+			if strings.HasPrefix(name, prefix) && strings.HasSuffix(name, suffix) {
 				return name[:len(name)-len(suffix)], nil
 			}
 		}
@@ -165,6 +169,7 @@ func (es *EntryStore) getFilenameForID(ID string) (string, error) {
 	return "", errNotExists
 }
 
+// List retruns a list of entries
 func (es *EntryStore) List() ([]*model.Entry, error) {
 
 	fileInfos, err := ioutil.ReadDir(es.path + entriesPath)
@@ -173,18 +178,18 @@ func (es *EntryStore) List() ([]*model.Entry, error) {
 		return nil, err
 	}
 
-    sort.Sort(FileInfos(fileInfos))
+	sort.Sort(sortFileInfos(fileInfos))
 
 	entries := make([]*model.Entry, 0, len(fileInfos))
 
 	for _, fileInfo := range fileInfos {
 		if !fileInfo.IsDir() && strings.HasSuffix(fileInfo.Name(), mdExt) {
 			name := fileInfo.Name()
-            pos := strings.Index(name,".")
-            if pos == -1 {
-                return nil,fmt.Errorf("Bad filename %v",name)
-            }
-            entry, err := es.get(name[:pos])
+			pos := strings.Index(name, ".")
+			if pos == -1 {
+				return nil, fmt.Errorf("Bad filename %v", name)
+			}
+			entry, err := es.get(name[:pos])
 			if err != nil {
 				return nil, err
 			}
@@ -194,15 +199,17 @@ func (es *EntryStore) List() ([]*model.Entry, error) {
 	return entries[:], nil
 }
 
+// SearchResult is the return type for searches
 type SearchResult struct {
-    ID string
-    Title string
-    Matches []string
+	ID      string
+	Title   string
+	Matches []string
 }
 
-func (es *EntryStore) Search(expr string) ( []SearchResult, error) {
+// Search entries using a regular expression
+func (es *EntryStore) Search(expr string) ([]SearchResult, error) {
 
-    rg,err := regexp.Compile(expr)
+	rg, err := regexp.Compile(expr)
 	if err != nil {
 		return nil, err
 	}
@@ -213,40 +220,38 @@ func (es *EntryStore) Search(expr string) ( []SearchResult, error) {
 		return nil, err
 	}
 
-    sort.Sort(FileInfos(fileInfos))
+	sort.Sort(sortFileInfos(fileInfos))
 
 	results := []SearchResult{}
 
 	for _, fileInfo := range fileInfos {
 
-        if !fileInfo.IsDir() && strings.HasSuffix(fileInfo.Name(), mdExt) {
+		if !fileInfo.IsDir() && strings.HasSuffix(fileInfo.Name(), mdExt) {
 
-            name := fileInfo.Name()
-            pos := strings.Index(name,".")
-            if pos == -1 {
-                return nil,fmt.Errorf("Bad filename %v",name)
-            }
+			name := fileInfo.Name()
+			pos := strings.Index(name, ".")
+			if pos == -1 {
+				return nil, fmt.Errorf("Bad filename %v", name)
+			}
 
-            entry, err := es.get(name[:pos])
+			entry, err := es.get(name[:pos])
 			if err != nil {
 				return nil, err
 			}
 
-            matches := []string{}
-            lines := strings.Split(entry.Markdown,"\n")
-            for _,line := range lines {
-                if rg.MatchString(line) {
-                    matches = append (matches, line)
-                }
-            }
+			matches := []string{}
+			lines := strings.Split(entry.Markdown, "\n")
+			for _, line := range lines {
+				if rg.MatchString(line) {
+					matches = append(matches, line)
+				}
+			}
 
-            if len(matches) > 0 {
-                results = append(results,
-                    SearchResult{entry.ID,entry.Title,matches})
-            }
+			if len(matches) > 0 {
+				results = append(results,
+					SearchResult{entry.ID, entry.Title, matches})
+			}
 		}
 	}
 	return results, nil
 }
-
-

@@ -26,6 +26,7 @@ var (
 	}
 )
 
+// Render a markdown into html
 func Render(markdown string) []byte {
 	rendered := renderImages(markdown)
 	return blackfriday.MarkdownCommon(rendered)
@@ -36,7 +37,7 @@ func renderImages(markdown string) []byte {
 	var block bytes.Buffer
 	var handler renderHandler
 	var imagetags string
-    var params string
+	var params string
 
 	lines := strings.Split(markdown, "\n")
 	inblock := false
@@ -54,13 +55,13 @@ func renderImages(markdown string) []byte {
 				} else {
 					imagetags = ""
 				}
-                if strings.Contains(blocktype,":") {
-                    split := strings.Split(blocktype, ":")
+				if strings.Contains(blocktype, ":") {
+					split := strings.Split(blocktype, ":")
 					blocktype = split[0]
 					params = split[1]
-                } else {
-                    params = ""
-                }
+				} else {
+					params = ""
+				}
 				var exists bool
 				if handler, exists = renderHandlers[blocktype]; exists {
 					block = bytes.Buffer{}
@@ -71,10 +72,10 @@ func renderImages(markdown string) []byte {
 				if writer == &block {
 					writer = &out
 					data := block.Bytes()
-                    hasher := sha1.New()
-                    hasher.Write(data)
-                    hasher.Write([]byte(params))
-                    sha1 := hasher.Sum(nil)
+					hasher := sha1.New()
+					hasher.Write(data)
+					hasher.Write([]byte(params))
+					sha1 := hasher.Sum(nil)
 					ID := hex.EncodeToString(sha1[:])
 					filename := handler.filename(ID)
 					if !store.ExistsCache(filename) {

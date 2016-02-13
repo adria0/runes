@@ -5,18 +5,18 @@ import (
 	"github.com/amassanet/gopad/web/render"
 	"github.com/gin-gonic/gin"
 	"html/template"
+	"log"
+	"os/user"
 	"strconv"
-    "os/user"
-    "log"
 )
 
 type Config struct {
 	Port   int
 	Prefix string
-    Auth struct {
-        GoogleClientID string
-        AllowedEmails []string
-    }
+	Auth   struct {
+		GoogleClientID string
+		AllowedEmails  []string
+	}
 }
 
 type Server struct {
@@ -44,7 +44,7 @@ func templateReloader(c *gin.Context) {
 
 func NewServer(config Config) {
 
-    store.InitCache()
+	store.InitCache()
 
 	g := gin.New()
 	g.Use(templateReloader, gin.Logger(), gin.Recovery())
@@ -54,22 +54,21 @@ func NewServer(config Config) {
 		Config: config,
 	}
 
-	if tmpl, err := template.New("name").Funcs(markdownRender ).ParseGlob("web/templates/*"); err == nil {
+	if tmpl, err := template.New("name").Funcs(markdownRender).ParseGlob("web/templates/*"); err == nil {
 		server.Engine.SetHTMLTemplate(tmpl)
 	} else {
 		panic(err)
 	}
 
-    usr,err := user.Current()
-    if err!= nil {
-        log.Fatal(err)
-    }
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	server.Store = store.NewStore(usr.HomeDir+"/.gopad")
+	server.Store = store.NewStore(usr.HomeDir + "/.gopad")
 	Srv = &server
 }
 
 func StartServer() {
-    Srv.Engine.Run(":" + strconv.Itoa(Srv.Config.Port))
+	Srv.Engine.Run(":" + strconv.Itoa(Srv.Config.Port))
 }
-

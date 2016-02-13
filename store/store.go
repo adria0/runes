@@ -1,9 +1,11 @@
 package store
 
+// Config uration for application store
 type Config struct {
 	path string
 }
 
+// Store s
 type Store struct {
 	Entry *EntryStore
 	File  *FileStore
@@ -11,6 +13,7 @@ type Store struct {
 
 var filenameRunes map[rune]rune
 
+// Initializes a new store
 func NewStore(path string) *Store {
 	search := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.ÀÁÈÉÌÍÒÓÙÚàáèéìíòóùúÑñ")
 	replace := []rune("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz0123456789-.aaeeiioouuaaeeiioouuNn")
@@ -43,4 +46,3 @@ func replaceFilenameChars(s string) string {
 	}
 	return string(r)
 }
-
