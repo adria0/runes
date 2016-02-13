@@ -13,17 +13,16 @@ import (
 var cfgFile string
 var C server.Config
 
-
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "gopad",
 	Short: "Minimal go notepad",
-	Long: `A minimal markdown personal notepad written in go`,
+	Long:  `A minimal markdown personal notepad written in go`,
 	Run: func(cmd *cobra.Command, args []string) {
-	    server.NewServer(C)
-	    web.InitWeb()
-	    server.StartServer()
-    },
+		server.NewServer(C)
+		web.InitWeb()
+		server.StartServer()
+	},
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
@@ -53,19 +52,19 @@ func initConfig() {
 		viper.SetConfigFile(cfgFile)
 	}
 
-    viper.SetConfigType("yaml")
+	viper.SetConfigType("yaml")
 	viper.SetConfigName(".gopad") // name of config file (without extension)
-	viper.AddConfigPath("$HOME")      // adding home directory as first search path
-	viper.SetEnvPrefix("gopad")         // so viper.AutomaticEnv will get matching envvars starting with O2M_
-	viper.AutomaticEnv()              // read in environment variables that match
+	viper.AddConfigPath("$HOME")  // adding home directory as first search path
+	viper.SetEnvPrefix("gopad")   // so viper.AutomaticEnv will get matching envvars starting with O2M_
+	viper.AutomaticEnv()          // read in environment variables that match
 
 	// If a config file is found, read it in.
-    if err := viper.ReadInConfig(); err == nil {
-	    fmt.Println("Using config file:", viper.ConfigFileUsed())
-    } else {
-        panic(fmt.Sprintf("Config file not found: %v",err))
-    }
-    if err := viper.Unmarshal(&C) ; err != nil {
-        panic(err)
-    }
+	if err := viper.ReadInConfig(); err == nil {
+		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	} else {
+		panic(fmt.Sprintf("Config file not found: %v", err))
+	}
+	if err := viper.Unmarshal(&C); err != nil {
+		panic(err)
+	}
 }

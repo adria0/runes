@@ -69,7 +69,7 @@ func (fs *FileStore) List() ([]string, error) {
 		return nil, err
 	}
 
-	sort.Sort(FileInfos(fileInfos))
+	sort.Sort(sortFileInfos(fileInfos))
 
 	files := make([]string, 0, len(fileInfos))
 
