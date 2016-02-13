@@ -18,7 +18,7 @@ const (
     oldentriesPath = "/entries/old/"
 	entriesPath    = "/entries/"
 	jsonExt        = ".json"
-	txtExt         = ".txt"
+	mdExt          = ".md"
     dateTimeFormat  = "20060102150405"
 )
 
@@ -44,7 +44,7 @@ func NewEntryStore(config Config) *EntryStore {
 func (es *EntryStore) add(entry *model.Entry) error {
 
 	filename := entry.ID + "_" + replaceFilenameChars(entry.Title)
-    txtPath := es.path+entriesPath+filename+txtExt
+    txtPath := es.path+entriesPath+filename+mdExt
     jsonPath := es.path+entriesPath+filename+jsonExt
 
     if _, err := os.Stat(txtPath); err == nil {
@@ -91,8 +91,8 @@ func (es *EntryStore) Store(entry *model.Entry) error {
     if err == nil {
         now := time.Now().Format(dateTimeFormat)
         os.Rename(
-            es.path+entriesPath+filename+txtExt,
-            es.path+oldentriesPath+filename+"_"+now+txtExt,
+            es.path+entriesPath+filename+mdExt,
+            es.path+oldentriesPath+filename+"_"+now+mdExt,
         )
         os.Rename(
             es.path+entriesPath+filename+jsonExt,
@@ -120,7 +120,7 @@ func (es *EntryStore) get(filename string) (*model.Entry, error) {
 		return nil, err
 	}
 
-	rawentry, err := ioutil.ReadFile(es.path + entriesPath + filename + txtExt)
+	rawentry, err := ioutil.ReadFile(es.path + entriesPath + filename + mdExt)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +152,7 @@ func (es *EntryStore) getFilenameForID(ID string) (string, error) {
 	}
 
     prefix := ID + "_"
-    suffix := txtExt
+    suffix := mdExt
 	for _, fileInfo := range fileInfos {
 		if !fileInfo.IsDir() {
 			name := fileInfo.Name()
@@ -178,7 +178,7 @@ func (es *EntryStore) List() ([]*model.Entry, error) {
 	entries := make([]*model.Entry, 0, len(fileInfos))
 
 	for _, fileInfo := range fileInfos {
-		if !fileInfo.IsDir() && strings.HasSuffix(fileInfo.Name(), txtExt) {
+		if !fileInfo.IsDir() && strings.HasSuffix(fileInfo.Name(), mdExt) {
 			name := fileInfo.Name()
             pos := strings.Index(name,".")
             if pos == -1 {
@@ -219,7 +219,7 @@ func (es *EntryStore) Search(expr string) ( []SearchResult, error) {
 
 	for _, fileInfo := range fileInfos {
 
-        if !fileInfo.IsDir() && strings.HasSuffix(fileInfo.Name(), txtExt) {
+        if !fileInfo.IsDir() && strings.HasSuffix(fileInfo.Name(), mdExt) {
 
             name := fileInfo.Name()
             pos := strings.Index(name,".")
