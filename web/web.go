@@ -23,12 +23,13 @@ func InitWeb() {
 	authorized.Use(checkAuthorization())
 
 	authorized.GET("/", doGETEntries)
-	authorized.GET("/entries", doGETEntries)
 	authorized.POST("/login", doPOSTLogin)
-	authorized.GET("/entries/:id", doGETEntry)
-	authorized.POST("/entries/:id", doPOSTEntry)
+	authorized.GET("/entries", doGETEntries)
+	authorized.GET("/entries/:id", doGETEntries)
+	authorized.GET("/entries/:id/edit", doGETEntry)
+	authorized.POST("/entries/:id/edit", doPOSTEntry)
 	authorized.POST("/markdown", doPOSTMarkdown)
-	authorized.POST("/entries/:id/files", doPOSTUpload)
+	authorized.POST("/entries/:id/edit/files", doPOSTUpload)
 	authorized.GET("/files/:id", doGETFile)
 	authorized.GET("/files", doGETFiles)
 	authorized.GET("/cache/:id", doGETCache)
@@ -129,7 +130,18 @@ func doPOSTMarkdown(c *gin.Context) {
 
 func doGETEntries(c *gin.Context) {
 
-	entries, err := server.Srv.Store.Entry.List()
+	var entries []*model.Entry
+	var err error
+
+	id := c.Param("id")
+	if id != "" {
+		var entry *model.Entry
+		entry,err = server.Srv.Store.Entry.Get(id)
+		entries = append(entries,entry)
+	} else {
+		entries, err = server.Srv.Store.Entry.List()
+	}	
+
 	if err != nil {
 		dumpError(c, err)
 		return
