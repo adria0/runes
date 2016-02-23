@@ -40,6 +40,8 @@
 
 <script>
 
+$(".markdown table").addClass("table table-condensed");
+
 {{ range $entry := .entries }}
   $( "#editbutton-{{ $entry.ID }}" ).click(function() {
       window.location.href = "{{ $.prefix }}/entries/{{ $entry.ID }}";

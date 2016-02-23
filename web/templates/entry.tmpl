@@ -107,6 +107,7 @@ function renderMarkdown (  ) {
         dataType: "json",
         success: function(data){
               $("#render").html(data.html);
+	      $(".markdown table").addClass("table table-condensed");
         },
             failure: function(errMsg) {
             alert(errMsg);
@@ -146,8 +147,6 @@ new Dropzone(document.body, { // Make the whole body a dropzone
         editor.insert(markdown);
     }
 });
-
-
 
 
 </script>

@@ -29,8 +29,14 @@ var (
 // Render a markdown into html
 func Render(markdown string) []byte {
 	rendered := renderImages(markdown)
-	return blackfriday.MarkdownCommon(rendered)
+	html:=blackfriday.MarkdownCommon(rendered)
+	var out bytes.Buffer
+        out.WriteString("<div class='markdown'>")
+	out.Write(html)
+        out.WriteString("</div>")
+	return out.Bytes()
 }
+
 
 func renderImages(markdown string) []byte {
 	var out bytes.Buffer
