@@ -123,7 +123,7 @@ func doGETCache(c *gin.Context) {
 func doPOSTMarkdown(c *gin.Context) {
 	var json dtoMarkdownRender
 	if c.BindJSON(&json) == nil {
-		html := string(render.Render(json.Markdown,server.Srv.Dict))
+		html := string(render.Render(json.Markdown, server.Srv.Dict))
 		c.JSON(http.StatusOK, gin.H{"html": html})
 	}
 }
@@ -136,11 +136,11 @@ func doGETEntries(c *gin.Context) {
 	id := c.Param("id")
 	if id != "" {
 		var entry *model.Entry
-		entry,err = server.Srv.Store.Entry.Get(id)
-		entries = append(entries,entry)
+		entry, err = server.Srv.Store.Entry.Get(id)
+		entries = append(entries, entry)
 	} else {
 		entries, err = server.Srv.Store.Entry.List()
-	}	
+	}
 
 	if err != nil {
 		dumpError(c, err)
@@ -251,7 +251,7 @@ func doPOSTEntry(c *gin.Context) {
 			dumpError(c, err)
 			return
 		}
-        server.Srv.Dict.Rebuild()
+		server.Srv.Dict.Rebuild()
 		c.Redirect(301, server.Srv.Config.Prefix+"/entries")
 		return
 	}
