@@ -1,8 +1,8 @@
 package server
 
 import (
-	"github.com/amassanet/gopad/store"
-	"github.com/amassanet/gopad/web/render"
+	"github.com/adriamb/gopad/store"
+	"github.com/adriamb/gopad/web/render"
 	"github.com/gin-gonic/gin"
 	"html/template"
 	"log"

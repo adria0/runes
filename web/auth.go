@@ -3,7 +3,7 @@ package web
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/amassanet/gopad/server"
+	"github.com/adriamb/gopad/server"
 	"github.com/gin-gonic/gin"
 	"math/rand"
 	"net/http"

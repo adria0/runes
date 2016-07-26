@@ -5,7 +5,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
-	"github.com/amassanet/gopad/store"
+	"github.com/adriamb/gopad/store"
 	"github.com/russross/blackfriday"
 	"strings"
 )

@@ -1,10 +1,10 @@
 package web
 
 import (
-	"github.com/amassanet/gopad/model"
-	"github.com/amassanet/gopad/server"
-	"github.com/amassanet/gopad/store"
-	"github.com/amassanet/gopad/web/render"
+	"github.com/adriamb/gopad/model"
+	"github.com/adriamb/gopad/server"
+	"github.com/adriamb/gopad/store"
+	"github.com/adriamb/gopad/web/render"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"

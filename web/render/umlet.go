@@ -3,7 +3,7 @@ package render
 import (
 	"bytes"
 	"fmt"
-	"github.com/amassanet/gopad/store"
+	"github.com/adriamb/gopad/store"
 	"html/template"
 	"os/exec"
 )

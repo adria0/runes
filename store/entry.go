@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/amassanet/gopad/model"
+	"github.com/adriamb/gopad/model"
 	"io/ioutil"
 	"log"
 	"os"
