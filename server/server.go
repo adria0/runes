@@ -1,8 +1,9 @@
 package server
 
 import (
-	"github.com/amassanet/gopad/store"
-	"github.com/amassanet/gopad/web/render"
+	"github.com/adriamb/gopad/dict"
+	"github.com/adriamb/gopad/store"
+	"github.com/adriamb/gopad/web/render"
 	"github.com/gin-gonic/gin"
 	"html/template"
 	"log"
@@ -21,15 +22,16 @@ type Config struct {
 
 type Server struct {
 	Config
-	Engine *gin.Engine
-	Store  *store.Store
+	Engine      *gin.Engine
+	Store       *store.Store
+    Dict        *dict.Dict
 }
 
 var Srv *Server
 
 var markdownRender = template.FuncMap{
 	"markdown": func(s string) template.HTML {
-		proc := string(render.Render(s))
+		proc := string(render.Render(s,Srv.Dict))
 		return template.HTML(proc)
 	},
 }
@@ -49,9 +51,18 @@ func NewServer(config Config) {
 	g := gin.New()
 	g.Use(templateReloader, gin.Logger(), gin.Recovery())
 
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+    store := store.NewStore(usr.HomeDir + "/.gopad")
+
 	server := Server{
 		Engine: g,
 		Config: config,
+        Store: store,
+        Dict: dict.New(store),
 	}
 
 	if tmpl, err := template.New("name").Funcs(markdownRender).ParseGlob("web/templates/*"); err == nil {
@@ -60,12 +71,6 @@ func NewServer(config Config) {
 		panic(err)
 	}
 
-	usr, err := user.Current()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	server.Store = store.NewStore(usr.HomeDir + "/.gopad")
 	Srv = &server
 }
 

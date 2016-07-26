@@ -1,10 +1,10 @@
 package web
 
 import (
-	"github.com/amassanet/gopad/model"
-	"github.com/amassanet/gopad/server"
-	"github.com/amassanet/gopad/store"
-	"github.com/amassanet/gopad/web/render"
+	"github.com/adriamb/gopad/model"
+	"github.com/adriamb/gopad/server"
+	"github.com/adriamb/gopad/store"
+	"github.com/adriamb/gopad/web/render"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
@@ -123,7 +123,7 @@ func doGETCache(c *gin.Context) {
 func doPOSTMarkdown(c *gin.Context) {
 	var json dtoMarkdownRender
 	if c.BindJSON(&json) == nil {
-		html := string(render.Render(json.Markdown))
+		html := string(render.Render(json.Markdown,server.Srv.Dict))
 		c.JSON(http.StatusOK, gin.H{"html": html})
 	}
 }
@@ -251,6 +251,7 @@ func doPOSTEntry(c *gin.Context) {
 			dumpError(c, err)
 			return
 		}
+        server.Srv.Dict.Rebuild()
 		c.Redirect(301, server.Srv.Config.Prefix+"/entries")
 		return
 	}

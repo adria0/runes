@@ -34,10 +34,40 @@ h2 {
 }
 
 img[alt=""]      { max-width: 100%;  max-height: 400px; }
-img[alt="scale"] { max-width: 100%;  max-height: 400px; }
-img[alt="100px"] { max-width: 100px; max-height: 400px; }
-img[alt="200px"] { max-width: 200px; max-height: 400px; }
-img[alt="300px"] { max-width: 300px; max-height: 400px; }
-img[alt="400px"] { max-width: 400px; max-height: 400px; }
-img[alt="500px"] { max-width: 500px; max-height: 400px; }
-img[alt="600px"] { max-width: 600px; max-height: 400px; }
+img[alt="scale"] { max-width: 100%;  }
+img[alt="100px"] { max-width: 100px; }
+img[alt="200px"] { max-width: 200px; }
+img[alt="300px"] { max-width: 300px; }
+img[alt="400px"] { max-width: 400px; }
+img[alt="500px"] { max-width: 500px; }
+img[alt="600px"] { max-width: 600px; }
+
+.tooltip{
+    display: inline;
+    position: relative;
+}
+
+.tooltip:hover:after{
+    background: #333;
+    background: rgba(0,0,0,.8);
+    border-radius: 5px;
+    bottom: 26px;
+    color: #fff;
+    content: attr(title);
+    left: 20%;
+    padding: 5px 15px;
+    position: absolute;
+    z-index: 98;
+    width: 220px;
+}
+
+.tooltip:hover:before{
+    border: solid;
+    border-color: #333 transparent;
+    border-width: 6px 6px 0 6px;
+    bottom: 20px;
+    content: "";
+    left: 50%;
+    position: absolute;
+    z-index: 99;
+}

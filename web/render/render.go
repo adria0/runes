@@ -5,9 +5,11 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
-	"github.com/amassanet/gopad/store"
+	"github.com/adriamb/gopad/store"
+	"github.com/adriamb/gopad/dict"
 	"github.com/russross/blackfriday"
 	"strings"
+    "log"
 )
 
 type renderHandler struct {
@@ -27,13 +29,25 @@ var (
 )
 
 // Render a markdown into html
-func Render(markdown string) []byte {
-	rendered := renderImages(markdown)
-	html:=blackfriday.MarkdownCommon(rendered)
-	var out bytes.Buffer
-        out.WriteString("<div class='markdown'>")
-	out.Write(html)
-        out.WriteString("</div>")
+func Render(markdown string, dict *dict.Dict) []byte {
+
+    rendered := renderImages(markdown)
+    html := string(blackfriday.MarkdownCommon(rendered))
+
+    defs, err := dict.Defs()
+    if err==nil {
+        for k,v := range defs {
+            v = `<a href="#"><span title="`+v+`">`+k+`</span></a>`
+            html = strings.Replace(html, "§"+k, v,-1)
+        }
+    } else {
+        log.Printf("%v",err)
+    }
+        
+    var out bytes.Buffer
+    out.WriteString("<div class='markdown'>")
+	out.Write([]byte(html))
+    out.WriteString("</div>")
 	return out.Bytes()
 }
 

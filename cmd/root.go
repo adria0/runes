@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/amassanet/gopad/server"
-	"github.com/amassanet/gopad/web"
+	"github.com/adriamb/gopad/server"
+	"github.com/adriamb/gopad/web"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
