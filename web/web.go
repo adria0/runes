@@ -123,7 +123,7 @@ func doGETCache(c *gin.Context) {
 func doPOSTMarkdown(c *gin.Context) {
 	var json dtoMarkdownRender
 	if c.BindJSON(&json) == nil {
-		html := string(render.Render(json.Markdown))
+		html := string(render.Render(json.Markdown,server.Srv.Dict))
 		c.JSON(http.StatusOK, gin.H{"html": html})
 	}
 }
@@ -251,6 +251,7 @@ func doPOSTEntry(c *gin.Context) {
 			dumpError(c, err)
 			return
 		}
+        server.Srv.Dict.Rebuild()
 		c.Redirect(301, server.Srv.Config.Prefix+"/entries")
 		return
 	}
