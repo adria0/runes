@@ -1,18 +1,18 @@
 package dict
 
 import (
-    "github.com/adriamb/gopad/store"
-    "strings"
+	"github.com/adriamb/gopad/store"
+	"strings"
 	"unicode"
 )
 
 type Dict struct {
-	defs map[string]string
-    store *store.Store
+	defs  map[string]string
+	store *store.Store
 }
 
 func New(store *store.Store) *Dict {
-	return &Dict{nil,store}
+	return &Dict{nil, store}
 }
 
 func (d *Dict) Rebuild() error {
@@ -20,37 +20,37 @@ func (d *Dict) Rebuild() error {
 	return d.build()
 }
 
-func (d *Dict) Defs() (map[string]string,error) {
+func (d *Dict) Defs() (map[string]string, error) {
 
-    if d.defs != nil {
-		return d.defs,nil
+	if d.defs != nil {
+		return d.defs, nil
 	}
 
-    err:=d.build()
-    if err != nil {
-        return nil,err
-    }
+	err := d.build()
+	if err != nil {
+		return nil, err
+	}
 
-    return d.defs,nil
+	return d.defs, nil
 
 }
 
 func (d *Dict) build() error {
 
 	entries, err := d.store.Entry.List()
-    if err != nil {
+	if err != nil {
 		return err
 	}
 
 	d.defs = make(map[string]string)
 
 	for _, entry := range entries {
-	
-        lines := strings.Split(entry.Markdown, "\n")
+
+		lines := strings.Split(entry.Markdown, "\n")
 		word := ""
 		description := ""
-		
-        for i := 0; i < len(lines); i++ {
+
+		for i := 0; i < len(lines); i++ {
 
 			line := strings.TrimSpace(lines[i])
 			lineRunes := []rune(line)
@@ -74,7 +74,7 @@ func (d *Dict) build() error {
 				line := line[1:]
 				split := strings.SplitN(line, "§:", 2)
 				word = strings.TrimSpace(split[0])
-                description = strings.TrimSpace(split[1])
+				description = strings.TrimSpace(split[1])
 			}
 		}
 
@@ -84,7 +84,6 @@ func (d *Dict) build() error {
 
 	}
 
-    return nil
+	return nil
 
 }
-

@@ -22,16 +22,16 @@ type Config struct {
 
 type Server struct {
 	Config
-	Engine      *gin.Engine
-	Store       *store.Store
-    Dict        *dict.Dict
+	Engine *gin.Engine
+	Store  *store.Store
+	Dict   *dict.Dict
 }
 
 var Srv *Server
 
 var markdownRender = template.FuncMap{
 	"markdown": func(s string) template.HTML {
-		proc := string(render.Render(s,Srv.Dict))
+		proc := string(render.Render(s, Srv.Dict))
 		return template.HTML(proc)
 	},
 }
@@ -56,13 +56,13 @@ func NewServer(config Config) {
 		log.Fatal(err)
 	}
 
-    store := store.NewStore(usr.HomeDir + "/.gopad")
+	store := store.NewStore(usr.HomeDir + "/.gopad")
 
 	server := Server{
 		Engine: g,
 		Config: config,
-        Store: store,
-        Dict: dict.New(store),
+		Store:  store,
+		Dict:   dict.New(store),
 	}
 
 	if tmpl, err := template.New("name").Funcs(markdownRender).ParseGlob("web/templates/*"); err == nil {
