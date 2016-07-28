@@ -5,13 +5,13 @@ import (
 	"github.com/adriamb/gopad/server"
 	"github.com/adriamb/gopad/server/config"
 	"github.com/adriamb/gopad/store"
-	"github.com/adriamb/gopad/web/render"
 	"github.com/adriamb/gopad/web/auth"
+	"github.com/adriamb/gopad/web/render"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"os"
-	"log"
-    "strings"
+	"strings"
 )
 
 var aa *auth.Auth = auth.New()
@@ -19,7 +19,7 @@ var aa *auth.Auth = auth.New()
 // InitWeb Initializes the web
 func InitWeb() {
 
-	server.Srv.Engine.StaticFS("/static", http.Dir("web/static"))
+	server.Srv.Engine.StaticFS("/static", http.Dir("web/httpstatic"))
 	server.Srv.Engine.GET("/login", doGETLogin)
 
 	authorized := server.Srv.Engine.Group("/")
@@ -84,6 +84,10 @@ func doPOSTUpload(c *gin.Context) {
 
 	id := c.Param("id")
 
+    if existsStaticMd(id) {
+        return
+    }
+
 	file, fileHeader, err := c.Request.FormFile("file")
 
 	if err != nil {
@@ -137,12 +141,24 @@ func doGETEntries(c *gin.Context) {
 	var err error
 
 	id := c.Param("id")
+
 	if id != "" {
+
 		var entry *model.Entry
-		entry, err = server.Srv.Store.Entry.Get(id)
-		entries = append(entries, entry)
+		if existsStaticMd(id) {
+			entry, err = getStaticMdEntry(id)
+		} else {
+			entry, err = server.Srv.Store.Entry.Get(id)
+		}
+
+		if err == nil {
+			entries = append(entries, entry)
+		}
+
 	} else {
+
 		entries, err = server.Srv.Store.Entry.List()
+
 	}
 
 	if err != nil {
@@ -179,27 +195,27 @@ func doGETFiles(c *gin.Context) {
 
 func doGETLogin(c *gin.Context) {
 
-    if server.Srv.Config.Auth.Type == config.AuthNone {
-        aa.Authorize(c)
+	if server.Srv.Config.Auth.Type == config.AuthNone {
+		aa.Authorize(c)
 		c.Redirect(http.StatusSeeOther, server.Srv.Config.Prefix+"/entries")
-        return
-    }
+		return
+	}
 
-    if server.Srv.Config.Auth.Type == config.AuthGoogle {
+	if server.Srv.Config.Auth.Type == config.AuthGoogle {
 
-        var err error
+		var err error
 
-        c.HTML(http.StatusOK, "logingoauth2.tmpl", gin.H{
-            "prefix":         server.Srv.Config.Prefix,
-            "googleclientid": server.Srv.Config.Auth.GoogleClientID,
-            "error":          err,
-        })
-        return
+		c.HTML(http.StatusOK, "logingoauth2.tmpl", gin.H{
+			"prefix":         server.Srv.Config.Prefix,
+			"googleclientid": server.Srv.Config.Auth.GoogleClientID,
+			"error":          err,
+		})
+		return
 
-    }
+	}
 
-    log.Fatalf("Server authentication type '%v' is not known.",
-        server.Srv.Config.Auth.Type)
+	log.Fatalf("Server authentication type '%v' is not known.",
+		server.Srv.Config.Auth.Type)
 
 }
 
@@ -233,14 +249,23 @@ func doGETEntry(c *gin.Context) {
 	id := c.Param("id")
 
 	var entry *model.Entry
+	var err error
+	var editable bool = true
 
 	if id != "new" {
-		var err error
-		entry, err = server.Srv.Store.Entry.Get(id)
+
+		if existsStaticMd(id) {
+			entry, err = getStaticMdEntry(id)
+			editable = false
+		} else {
+			entry, err = server.Srv.Store.Entry.Get(id)
+		}
+
 		if err != nil {
 			dumpError(c, err)
 			return
 		}
+
 	} else {
 		entry = &model.Entry{
 			ID: server.Srv.Store.Entry.NewID(),
@@ -248,18 +273,25 @@ func doGETEntry(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "entry.tmpl", gin.H{
-		"prefix": server.Srv.Config.Prefix,
-		"entry":  entry,
+		"prefix":   server.Srv.Config.Prefix,
+		"entry":    entry,
+		"editable": editable,
 	})
 
 }
 
 func doPOSTEntry(c *gin.Context) {
 
+    id := c.Param("id")
+
+    if existsStaticMd(id) {
+        return
+    }
+
 	if buttonPressed(c, "btnsave") {
 
 		entry := model.Entry{
-			ID:       c.Param("id"),
+			ID:       id,
 			Title:    c.DefaultPostForm("Title", "undefined"),
 			Markdown: c.DefaultPostForm("Markdown", "undefined"),
 		}

@@ -39,8 +39,10 @@
   <div class="row top-buffer">
 <!-- Button -->
     <div class="col-md-12">
+{{ if .editable }} 
         <button  name="btnsave" id="btnsave" class="btn btn-primary btn-lg">Save</button>
-         <button name="btnback" class="btn btn-normal btn-lg">Back</button>
+{{ end }}
+        <button name="btnback" class="btn btn-normal btn-lg">Back</button>
     </div>
 </div>
     </form>
