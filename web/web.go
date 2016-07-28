@@ -42,7 +42,7 @@ func InitWeb() {
 func checkAuthorization() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !aa.IsAuthorized(c) {
-			c.Redirect(301, server.Srv.Config.Prefix+"/login")
+			c.Redirect(http.StatusSeeOther, server.Srv.Config.Prefix+"/login")
 			return
 		}
 	}
@@ -214,7 +214,7 @@ func doPOSTGoogleOauth2Login(c *gin.Context) {
 			"error":  err,
 		})
 	} else {
-		c.Redirect(301, server.Srv.Config.Prefix+"/entries")
+		c.Redirect(http.StatusSeeOther, server.Srv.Config.Prefix+"/entries")
 	}
 }
 
@@ -270,12 +270,12 @@ func doPOSTEntry(c *gin.Context) {
 			return
 		}
 		server.Srv.Dict.Rebuild()
-		c.Redirect(301, server.Srv.Config.Prefix+"/entries")
+		c.Redirect(http.StatusSeeOther, server.Srv.Config.Prefix+"/entries")
 		return
 	}
 
 	if buttonPressed(c, "btnback") {
-		c.Redirect(301, server.Srv.Config.Prefix+"/entries")
+		c.Redirect(http.StatusSeeOther, server.Srv.Config.Prefix+"/entries")
 		return
 	}
 }
