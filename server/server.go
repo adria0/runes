@@ -1,7 +1,8 @@
 package server
 
 import (
-	"github.com/adriamb/gopad/server/config"
+    "github.com/GeertJohan/go.rice"
+    "github.com/adriamb/gopad/server/config"
 	"github.com/adriamb/gopad/dict"
 	"github.com/adriamb/gopad/store"
 	"github.com/adriamb/gopad/web/render"
@@ -10,6 +11,7 @@ import (
 	"log"
 	"os/user"
 	"strconv"
+    "fmt"
 )
 
 type Server struct {
@@ -30,7 +32,8 @@ var markdownRender = template.FuncMap{
 
 func templateReloader(c *gin.Context) {
 	if tmpl, err := template.New("name").Funcs(markdownRender).ParseGlob("web/templates/*"); err == nil {
-		Srv.Engine.SetHTMLTemplate(tmpl)
+        fmt.Printf("%#v",tmpl)
+        Srv.Engine.SetHTMLTemplate(tmpl)
 	} else {
 		panic(err)
 	}
@@ -39,6 +42,11 @@ func templateReloader(c *gin.Context) {
 func NewServer(config config.Config) {
 
 	store.InitCache()
+
+    tbox, _ := rice.FindBox("../web/templates")
+    if tbox == nil {
+
+    }
 
 	g := gin.New()
 	g.Use(templateReloader, gin.Logger(), gin.Recovery())
@@ -56,13 +64,13 @@ func NewServer(config config.Config) {
 		Store:  store,
 		Dict:   dict.New(store),
 	}
-
+/*
 	if tmpl, err := template.New("name").Funcs(markdownRender).ParseGlob("web/templates/*"); err == nil {
 		server.Engine.SetHTMLTemplate(tmpl)
 	} else {
 		panic(err)
 	}
-
+*/
 	Srv = &server
 }
 

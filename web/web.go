@@ -7,7 +7,8 @@ import (
 	"github.com/adriamb/gopad/store"
 	"github.com/adriamb/gopad/web/auth"
 	"github.com/adriamb/gopad/web/render"
-	"github.com/gin-gonic/gin"
+    "github.com/gin-gonic/gin"
+    "github.com/GeertJohan/go.rice"
 	"log"
 	"net/http"
 	"os"
@@ -19,7 +20,9 @@ var aa *auth.Auth = auth.New()
 // InitWeb Initializes the web
 func InitWeb() {
 
-	server.Srv.Engine.StaticFS("/static", http.Dir("web/httpstatic"))
+
+    server.Srv.Engine.StaticFS("/static", rice.MustFindBox("httpstatic").HTTPBox())
+	// server.Srv.Engine.StaticFS("/static", http.Dir("web/httpstatic"))
 	server.Srv.Engine.GET("/login", doGETLogin)
 
 	authorized := server.Srv.Engine.Group("/")
