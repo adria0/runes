@@ -1,3 +1,5 @@
+//go:generate rice embed-go
+
 package web
 
 import (
@@ -9,20 +11,63 @@ import (
 	"github.com/adriamb/gopad/web/render"
     "github.com/gin-gonic/gin"
     "github.com/GeertJohan/go.rice"
-	"log"
+    "html/template"
+    "log"
 	"net/http"
 	"os"
 	"strings"
+    "io/ioutil"
 )
 
 var aa *auth.Auth = auth.New()
 
+var markdownRender = template.FuncMap{
+    "markdown": func(s string) template.HTML {
+        proc := string(render.Render(s, server.Srv.Dict))
+        return template.HTML(proc)
+    },
+}
+
+func generateTemplate() *template.Template {
+    templateList := []string{
+    "500.tmpl", "entry.tmpl", "logingoauth2.tmpl",
+    "search.tmpl", "entries.tmpl", "files.tmpl", "menu.tmpl",
+    }
+
+    tbox, tboxerr := rice.FindBox("templates")
+    tmpl := template.New("name").Funcs(markdownRender)
+    for _, name := range templateList {
+        var content string
+        if tboxerr == nil {
+            content = tbox.MustString(name)
+        } else {
+            bytes, err := ioutil.ReadFile("web/templates/" + name)
+            if err != nil {
+                panic(err)
+            }
+            content = string(bytes)
+        }
+        _, err := tmpl.New(name).Parse(content)
+             if err != nil {
+                panic(err)
+            }
+    }
+    return tmpl
+}
+
 // InitWeb Initializes the web
 func InitWeb() {
 
+	server.Srv.Engine.SetHTMLTemplate(generateTemplate())
 
-    server.Srv.Engine.StaticFS("/static", rice.MustFindBox("httpstatic").HTTPBox())
-	// server.Srv.Engine.StaticFS("/static", http.Dir("web/httpstatic"))
+    tbox, err := rice.FindBox("httpstatic")
+
+    if err == nil {
+        server.Srv.Engine.StaticFS("/static", tbox.HTTPBox())
+    } else {
+        server.Srv.Engine.StaticFS("/static", http.Dir("web/httpstatic"))
+    }
+
 	server.Srv.Engine.GET("/login", doGETLogin)
 
 	authorized := server.Srv.Engine.Group("/")

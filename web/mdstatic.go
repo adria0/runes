@@ -1,39 +1,47 @@
 package web
 
 import (
-    "os"
-    "io/ioutil"
+	"github.com/GeertJohan/go.rice"
 	"github.com/adriamb/gopad/model"
+	"io/ioutil"
+	"os"
 )
 
 func existsStaticMd(id string) bool {
 
-	mdfile := "web/mdstatic/" + id + ".md"
-
-    if _, err := os.Stat(mdfile); err == nil {
-		return true
+	tbox, err := rice.FindBox("mdstatic")
+	if err == nil {
+		_, err = tbox.String(id + ".md")
+		return err == nil
 	}
 
+	if _, err := os.Stat("web/mdstatic/" + id + ".md"); err == nil {
+		return true
+	}
 	return false
 
 }
 
 func getStaticMdEntry(id string) (entry *model.Entry, err error) {
 
-	var content []byte
+	var content string
 
-	mdfile := "web/mdstatic/" + id + ".md"
-    content, err = ioutil.ReadFile(mdfile)
-
-	if err != nil {
-		return nil, err
+	tbox, err := rice.FindBox("mdstatic")
+	if err == nil {
+		content = tbox.MustString(id + ".md")
+	} else {
+		bytes, err := ioutil.ReadFile("web/mdstatic/" + id + ".md")
+		if err != nil {
+			return nil, err
+		}
+		content = string(bytes)
 	}
 
 	entry = &model.Entry{
 		ID:        id,
 		Title:     id,
 		Timestamp: 0,
-		Markdown:  string(content),
+		Markdown:  content,
 	}
 
 	return entry, err
