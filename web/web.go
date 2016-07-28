@@ -3,18 +3,21 @@ package web
 import (
 	"github.com/adriamb/gopad/model"
 	"github.com/adriamb/gopad/server"
+	"github.com/adriamb/gopad/server/config"
 	"github.com/adriamb/gopad/store"
 	"github.com/adriamb/gopad/web/render"
+	"github.com/adriamb/gopad/web/auth"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
-	"strings"
+	"log"
+    "strings"
 )
+
+var aa *auth.Auth = auth.New()
 
 // InitWeb Initializes the web
 func InitWeb() {
-
-	initAuth()
 
 	server.Srv.Engine.StaticFS("/static", http.Dir("web/static"))
 	server.Srv.Engine.GET("/login", doGETLogin)
@@ -23,7 +26,7 @@ func InitWeb() {
 	authorized.Use(checkAuthorization())
 
 	authorized.GET("/", doGETEntries)
-	authorized.POST("/login", doPOSTLogin)
+	authorized.POST("/logingoauth2", doPOSTGoogleOauth2Login)
 	authorized.GET("/entries", doGETEntries)
 	authorized.GET("/entries/:id", doGETEntries)
 	authorized.GET("/entries/:id/edit", doGETEntry)
@@ -38,7 +41,7 @@ func InitWeb() {
 
 func checkAuthorization() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if !isAuthValid(c) {
+		if !aa.IsAuthorized(c) {
 			c.Redirect(301, server.Srv.Config.Prefix+"/login")
 			return
 		}
@@ -176,22 +179,37 @@ func doGETFiles(c *gin.Context) {
 
 func doGETLogin(c *gin.Context) {
 
-	var err error
+    if server.Srv.Config.Auth.Type == config.AuthNone {
+        aa.Authorize(c)
+		c.Redirect(http.StatusSeeOther, server.Srv.Config.Prefix+"/entries")
+        return
+    }
 
-	c.HTML(http.StatusOK, "login.tmpl", gin.H{
-		"prefix":         server.Srv.Config.Prefix,
-		"googleclientid": server.Srv.Config.Auth.GoogleClientID,
-		"error":          err,
-	})
+    if server.Srv.Config.Auth.Type == config.AuthGoogle {
+
+        var err error
+
+        c.HTML(http.StatusOK, "logingoauth2.tmpl", gin.H{
+            "prefix":         server.Srv.Config.Prefix,
+            "googleclientid": server.Srv.Config.Auth.GoogleClientID,
+            "error":          err,
+        })
+        return
+
+    }
+
+    log.Fatalf("Server authentication type '%v' is not known.",
+        server.Srv.Config.Auth.Type)
+
 }
 
-func doPOSTLogin(c *gin.Context) {
+func doPOSTGoogleOauth2Login(c *gin.Context) {
 
 	oauthtoken := c.DefaultPostForm("oauthtoken", "undefined")
 
-	_, err := doAuth(c, oauthtoken)
+	err := aa.AuthorizeGoogleOauth2(c, oauthtoken)
 	if err != nil {
-		c.HTML(http.StatusOK, "login.tmpl", gin.H{
+		c.HTML(http.StatusOK, "logingoauth2.tmpl", gin.H{
 			"prefix": server.Srv.Config.Prefix,
 			"error":  err,
 		})

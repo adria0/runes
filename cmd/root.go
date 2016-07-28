@@ -5,13 +5,14 @@ import (
 	"os"
 
 	"github.com/adriamb/gopad/server"
+	"github.com/adriamb/gopad/server/config"
 	"github.com/adriamb/gopad/web"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var cfgFile string
-var C server.Config
+var C config.Config
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{

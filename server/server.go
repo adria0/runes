@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/adriamb/gopad/server/config"
 	"github.com/adriamb/gopad/dict"
 	"github.com/adriamb/gopad/store"
 	"github.com/adriamb/gopad/web/render"
@@ -11,17 +12,8 @@ import (
 	"strconv"
 )
 
-type Config struct {
-	Port   int
-	Prefix string
-	Auth   struct {
-		GoogleClientID string
-		AllowedEmails  []string
-	}
-}
-
 type Server struct {
-	Config
+	config.Config
 	Engine *gin.Engine
 	Store  *store.Store
 	Dict   *dict.Dict
@@ -44,7 +36,7 @@ func templateReloader(c *gin.Context) {
 	}
 }
 
-func NewServer(config Config) {
+func NewServer(config config.Config) {
 
 	store.InitCache()
 
