@@ -1,7 +1,0 @@
-package: .
-import:
-- package: github.com/crowdsurge/banner
-- package: github.com/gin-gonic/gin
-- package: github.com/russross/blackfriday
-- package: github.com/spf13/cobra
-- package: github.com/spf13/viper
