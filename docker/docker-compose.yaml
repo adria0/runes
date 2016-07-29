@@ -1,0 +1,11 @@
+version: '2'
+services:
+    gopad:
+        build: .
+        working_dir: /go/src/github.com/adriamb/gopad
+        command: go run main.go --config docker/gopad.yaml
+        ports:
+            - "127.0.0.1:8088:8088"
+        volumes:
+            - ..:/go/src/github.com/adriamb/gopad
+

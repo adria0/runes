@@ -8,7 +8,10 @@ const (
 type Config struct {
 	Port   int
 	Prefix string
-	Auth   struct {
+	DataDir string
+    TmpDir string
+    CacheDir string
+    Auth   struct {
 		Type           string
 		GoogleClientID string
 		AllowedEmails  []string

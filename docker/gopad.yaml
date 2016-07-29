@@ -1,0 +1,4 @@
+port: 8088
+datadir: docker/data
+auth:
+    type: none

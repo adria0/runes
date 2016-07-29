@@ -3,8 +3,10 @@ package cmd
 import (
 	"fmt"
 	"os"
-
-	"github.com/adriamb/gopad/server"
+    "log"
+    "os/user"
+    "encoding/json"
+    "github.com/adriamb/gopad/server"
 	"github.com/adriamb/gopad/server/config"
 	"github.com/adriamb/gopad/web"
 	"github.com/spf13/cobra"
@@ -68,4 +70,24 @@ func initConfig() {
 	if err := viper.Unmarshal(&C); err != nil {
 		panic(err)
 	}
+
+    if C.DataDir == "" {
+        usr, err := user.Current()
+        if err != nil {
+            log.Fatal(err)
+        }
+        C.DataDir = usr.HomeDir + "/.gopad";
+    }
+
+    if C.TmpDir == "" {
+        C.TmpDir = "/tmp/gopad/temp";
+    }
+
+    if C.CacheDir == "" {
+        C.CacheDir = "/tmp/gopad/cache";
+    }
+
+    json, _ := json.MarshalIndent(C, "", "  ")
+    fmt.Println("Efective configuration: "+string(json))
+
 }
