@@ -5,10 +5,7 @@ import (
 	"github.com/adriamb/gopad/server/config"
 	"github.com/adriamb/gopad/store"
 	"github.com/gin-gonic/gin"
-	"log"
-	"os/user"
 	"strconv"
-	//"fmt"
 )
 
 type Server struct {
@@ -22,17 +19,13 @@ var Srv *Server
 
 func NewServer(config config.Config) {
 
-	store.InitCache()
+    store.InitCache(config.CacheDir, config.TmpDir)
 
+	gin.SetMode(gin.ReleaseMode)
 	g := gin.New()
-	g.Use(gin.Logger(), gin.Recovery())
+    g.Use(gin.Logger(), gin.Recovery())
 
-	usr, err := user.Current()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	store := store.NewStore(usr.HomeDir + "/.gopad")
+	store := store.NewStore(config.DataDir)
 
 	server := Server{
 		Engine: g,

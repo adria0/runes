@@ -6,12 +6,14 @@ import (
 	"os"
 )
 
-var cacheDir = "/tmp/gopad/cache"
-var tempDir = "/tmp/gopad/temp"
+var cacheDir string
+var tempDir string
 
 // InitCache Initializes cache
-func InitCache() {
-	if err := os.MkdirAll(cacheDir, 0744); err != nil {
+func InitCache(cacheDir_, tempDir_ string) {
+	cacheDir = cacheDir_
+    tempDir = tempDir_
+    if err := os.MkdirAll(cacheDir, 0744); err != nil {
 		log.Fatalf("Cannot create folder %v", err)
 	}
 	if err := os.MkdirAll(tempDir, 0744); err != nil {

@@ -1,11 +1,11 @@
 version: '2'
 services:
-  backend:
-    image: golang:1.6.2-onbuild
-    working_dir: /go/src/github.com/adriamb/gopad
-    command: bash -c "go run main.go --config docker/gopad.yaml"
-    ports:
-        - "8081"
-    volumes:
-        - ..:/go/src/github.com/adriamb/gopad
+    gopad:
+        build: .
+        working_dir: /go/src/github.com/adriamb/gopad
+        command: go run main.go --config docker/gopad.yaml
+        ports:
+            - "127.0.0.1:8088:8088"
+        volumes:
+            - ..:/go/src/github.com/adriamb/gopad
 
