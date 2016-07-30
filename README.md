@@ -28,7 +28,7 @@ run docker-compose
 
 `docker-compose up`
 
-go to a browser `http://localhost:8086`
+go to a browser `http://localhost:8088`
 
 all files generated will be kept in the `docker/data`, take a look
 
@@ -61,7 +61,7 @@ You can access the file with the created link or using the Files menu item.
 
 Gopad uses graphviz using the external command `dot`, so it should be installed in your system.
 
-The syntax for dot is (note that the `digraph {}` element are automatically added.
+The syntax for dot is (note that the `digraph {}` element are automatically added)
 
         ```dot
         func getTrue() bool {
