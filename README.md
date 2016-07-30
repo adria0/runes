@@ -1,5 +1,4 @@
 # gopad: a personal markdown notepad [![Build Status](https://travis-ci.org/adriamb/gopad.svg?branch=master)](https://travis-ci.org/adriamb/gopad) [![Go Report Card](https://goreportcard.com/badge/github.com/amassanet/gopad)](https://goreportcard.com/report/github.com/amassanet/gopad)
-============================
 
 GoPad is a web application, with the following features:
 
