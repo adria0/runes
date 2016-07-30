@@ -60,7 +60,7 @@ func (a *Auth) AuthorizeGoogleOauth2(c *gin.Context, oauthToken string) error {
 		return fmt.Errorf("Bad email %v", email)
 	}
 
-    a.Authorize(c);
+	a.Authorize(c)
 
 	return nil
 }

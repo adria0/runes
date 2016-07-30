@@ -10,55 +10,54 @@ import (
 )
 
 type Auth struct {
-    sync.Mutex
-    sessions map[string]int64
+	sync.Mutex
+	sessions map[string]int64
 }
 
 func New() *Auth {
-    return &Auth {
-        sessions : make(map[string]int64),
-    }
+	return &Auth{
+		sessions: make(map[string]int64),
+	}
 }
 
 func (a *Auth) IsAuthorized(c *gin.Context) bool {
 
-    var sessionCookie *http.Cookie
+	var sessionCookie *http.Cookie
 
-    for _, cookie := range c.Request.Cookies() {
+	for _, cookie := range c.Request.Cookies() {
 		if cookie.Name == "token" {
-            sessionCookie = cookie
+			sessionCookie = cookie
 			break
 		}
 	}
 
-    if sessionCookie == nil {
-        return false
-    }
+	if sessionCookie == nil {
+		return false
+	}
 
+	a.Lock()
+	defer a.Unlock()
 
-    a.Lock()
-    defer a.Unlock()
+	now := time.Now().Unix()
 
-    now := time.Now().Unix()
+	if expires, exists := a.sessions[sessionCookie.Value]; exists {
+		if now > expires {
+			delete(a.sessions, sessionCookie.Value)
+			return false
+		}
+		return true
+	}
 
-    if expires, exists := a.sessions[sessionCookie.Value]; exists {
-        if now > expires {
-            delete(a.sessions, sessionCookie.Value)
-            return false
-        }
-        return true
-    }
-
-    return false
+	return false
 
 }
 
-func (a *Auth) Authorize(c *gin.Context)  {
+func (a *Auth) Authorize(c *gin.Context) {
 
 	token128 := fmt.Sprintf("%x%x%x%x",
 		rand.Uint32(), rand.Uint32(), rand.Uint32(), rand.Uint32())
 
-    expires := time.Now().Unix() + 7*24*3600
+	expires := time.Now().Unix() + 7*24*3600
 
 	a.Lock()
 	a.sessions[token128] = expires
@@ -67,4 +66,3 @@ func (a *Auth) Authorize(c *gin.Context)  {
 	cookie := http.Cookie{Name: "token", Value: token128}
 	http.SetCookie(c.Writer, &cookie)
 }
-

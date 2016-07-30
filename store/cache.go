@@ -12,8 +12,8 @@ var tempDir string
 // InitCache Initializes cache
 func InitCache(cacheDir_, tempDir_ string) {
 	cacheDir = cacheDir_
-    tempDir = tempDir_
-    if err := os.MkdirAll(cacheDir, 0744); err != nil {
+	tempDir = tempDir_
+	if err := os.MkdirAll(cacheDir, 0744); err != nil {
 		log.Fatalf("Cannot create folder %v", err)
 	}
 	if err := os.MkdirAll(tempDir, 0744); err != nil {
