@@ -3,9 +3,10 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/adriamb/gopad/server"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 type userinfoStruct struct {
@@ -60,7 +61,7 @@ func (a *Auth) AuthorizeGoogleOauth2(c *gin.Context, oauthToken string) error {
 		return fmt.Errorf("Bad email %v", email)
 	}
 
-    a.Authorize(c);
+	a.Authorize(c)
 
 	return nil
 }

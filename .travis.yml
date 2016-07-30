@@ -1,5 +1,9 @@
 language: go
-
 go:
-  - 1.5
+  - 1.6
   - tip
+sudo: false
+install:
+  - echo "don't let travis automatically support godep in 'Godeps/_workspace/' path"
+script:
+  - make test-ci

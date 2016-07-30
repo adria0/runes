@@ -1,12 +1,13 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
-    "log"
-    "os/user"
-    "encoding/json"
-    "github.com/adriamb/gopad/server"
+	"os/user"
+
+	"github.com/adriamb/gopad/server"
 	"github.com/adriamb/gopad/server/config"
 	"github.com/adriamb/gopad/web"
 	"github.com/spf13/cobra"
@@ -14,6 +15,8 @@ import (
 )
 
 var cfgFile string
+
+// C is the package config
 var C config.Config
 
 // RootCmd represents the base command when called without any subcommands
@@ -71,23 +74,23 @@ func initConfig() {
 		panic(err)
 	}
 
-    if C.DataDir == "" {
-        usr, err := user.Current()
-        if err != nil {
-            log.Fatal(err)
-        }
-        C.DataDir = usr.HomeDir + "/.gopad";
-    }
+	if C.DataDir == "" {
+		usr, err := user.Current()
+		if err != nil {
+			log.Fatal(err)
+		}
+		C.DataDir = usr.HomeDir + "/.gopad"
+	}
 
-    if C.TmpDir == "" {
-        C.TmpDir = "/tmp/gopad/temp";
-    }
+	if C.TmpDir == "" {
+		C.TmpDir = "/tmp/gopad/temp"
+	}
 
-    if C.CacheDir == "" {
-        C.CacheDir = "/tmp/gopad/cache";
-    }
+	if C.CacheDir == "" {
+		C.CacheDir = "/tmp/gopad/cache"
+	}
 
-    json, _ := json.MarshalIndent(C, "", "  ")
-    fmt.Println("Efective configuration: "+string(json))
+	json, _ := json.MarshalIndent(C, "", "  ")
+	fmt.Println("Efective configuration: " + string(json))
 
 }

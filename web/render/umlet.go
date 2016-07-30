@@ -3,9 +3,10 @@ package render
 import (
 	"bytes"
 	"fmt"
-	"github.com/adriamb/gopad/store"
 	"html/template"
 	"os/exec"
+
+	"github.com/adriamb/gopad/store"
 )
 
 func filenameUmlet(ID string) string {

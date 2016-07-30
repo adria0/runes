@@ -3,56 +3,57 @@
 package web
 
 import (
+	"html/template"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+	"strings"
+
+	"github.com/GeertJohan/go.rice"
 	"github.com/adriamb/gopad/model"
 	"github.com/adriamb/gopad/server"
 	"github.com/adriamb/gopad/server/config"
 	"github.com/adriamb/gopad/store"
 	"github.com/adriamb/gopad/web/auth"
 	"github.com/adriamb/gopad/web/render"
-    "github.com/gin-gonic/gin"
-    "github.com/GeertJohan/go.rice"
-    "html/template"
-    "log"
-	"net/http"
-	"os"
-	"strings"
-    "io/ioutil"
+	"github.com/gin-gonic/gin"
 )
 
 var aa *auth.Auth = auth.New()
 
 var markdownRender = template.FuncMap{
-    "markdown": func(s string) template.HTML {
-        proc := string(render.Render(s, server.Srv.Dict))
-        return template.HTML(proc)
-    },
+	"markdown": func(s string) template.HTML {
+		proc := string(render.Render(s, server.Srv.Dict))
+		return template.HTML(proc)
+	},
 }
 
 func generateTemplate() *template.Template {
-    templateList := []string{
-    "500.tmpl", "entry.tmpl", "logingoauth2.tmpl",
-    "search.tmpl", "entries.tmpl", "files.tmpl", "menu.tmpl",
-    }
+	templateList := []string{
+		"500.tmpl", "entry.tmpl", "logingoauth2.tmpl",
+		"search.tmpl", "entries.tmpl", "files.tmpl", "menu.tmpl",
+	}
 
-    tbox, tboxerr := rice.FindBox("templates")
-    tmpl := template.New("name").Funcs(markdownRender)
-    for _, name := range templateList {
-        var content string
-        if tboxerr == nil {
-            content = tbox.MustString(name)
-        } else {
-            bytes, err := ioutil.ReadFile("web/templates/" + name)
-            if err != nil {
-                panic(err)
-            }
-            content = string(bytes)
-        }
-        _, err := tmpl.New(name).Parse(content)
-             if err != nil {
-                panic(err)
-            }
-    }
-    return tmpl
+	tbox, tboxerr := rice.FindBox("templates")
+	tmpl := template.New("name").Funcs(markdownRender)
+	for _, name := range templateList {
+		var content string
+		if tboxerr == nil {
+			content = tbox.MustString(name)
+		} else {
+			bytes, err := ioutil.ReadFile("web/templates/" + name)
+			if err != nil {
+				panic(err)
+			}
+			content = string(bytes)
+		}
+		_, err := tmpl.New(name).Parse(content)
+		if err != nil {
+			panic(err)
+		}
+	}
+	return tmpl
 }
 
 // InitWeb Initializes the web
@@ -60,13 +61,13 @@ func InitWeb() {
 
 	server.Srv.Engine.SetHTMLTemplate(generateTemplate())
 
-    tbox, err := rice.FindBox("httpstatic")
+	tbox, err := rice.FindBox("httpstatic")
 
-    if err == nil {
-        server.Srv.Engine.StaticFS("/static", tbox.HTTPBox())
-    } else {
-        server.Srv.Engine.StaticFS("/static", http.Dir("web/httpstatic"))
-    }
+	if err == nil {
+		server.Srv.Engine.StaticFS("/static", tbox.HTTPBox())
+	} else {
+		server.Srv.Engine.StaticFS("/static", http.Dir("web/httpstatic"))
+	}
 
 	server.Srv.Engine.GET("/login", doGETLogin)
 
@@ -132,9 +133,9 @@ func doPOSTUpload(c *gin.Context) {
 
 	id := c.Param("id")
 
-    if existsStaticMd(id) {
-        return
-    }
+	if existsStaticMd(id) {
+		return
+	}
 
 	file, fileHeader, err := c.Request.FormFile("file")
 
@@ -330,11 +331,11 @@ func doGETEntry(c *gin.Context) {
 
 func doPOSTEntry(c *gin.Context) {
 
-    id := c.Param("id")
+	id := c.Param("id")
 
-    if existsStaticMd(id) {
-        return
-    }
+	if existsStaticMd(id) {
+		return
+	}
 
 	if buttonPressed(c, "btnsave") {
 

@@ -5,11 +5,12 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/adriamb/gopad/dict"
 	"github.com/adriamb/gopad/store"
 	"github.com/russross/blackfriday"
-	"log"
-	"strings"
 )
 
 type renderHandler struct {
