@@ -43,6 +43,7 @@ func getEmailFromGoogle(accessToken string) (string, error) {
 	return userinfo.Email, nil
 }
 
+// AuthorizeGoogleOauth2 adds new autorization cookie from a oauth token
 func (a *Auth) AuthorizeGoogleOauth2(c *gin.Context, oauthToken string) error {
 
 	email, err := getEmailFromGoogle(oauthToken)

@@ -20,7 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var aa *auth.Auth = auth.New()
+var aa = auth.New()
 
 var markdownRender = template.FuncMap{
 	"markdown": func(s string) template.HTML {
@@ -299,7 +299,7 @@ func doGETEntry(c *gin.Context) {
 
 	var entry *model.Entry
 	var err error
-	var editable bool = true
+	var editable = true
 
 	if id != "new" {
 
@@ -347,10 +347,12 @@ func doPOSTEntry(c *gin.Context) {
 
 		err := server.Srv.Store.Entry.Store(&entry)
 		if err != nil {
+			err = server.Srv.Dict.Rebuild()
+		}
+		if err != nil {
 			dumpError(c, err)
 			return
 		}
-		server.Srv.Dict.Rebuild()
 		c.Redirect(http.StatusSeeOther, server.Srv.Config.Prefix+"/entries")
 		return
 	}

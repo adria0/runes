@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"log"
 	"strings"
 
@@ -29,26 +30,40 @@ var (
 	}
 )
 
+func mustWrite(w io.Writer, p []byte) {
+	_, err := w.Write(p)
+	if err != nil {
+		log.Panic(err)
+	}
+}
+
+func mustWriteString(w io.Writer, s string) {
+	_, err := w.Write([]byte(s))
+	if err != nil {
+		log.Panic(err)
+	}
+}
+
 // Render a markdown into html
 func Render(markdown string, dict *dict.Dict) []byte {
 
 	rendered := renderImages(markdown)
 	html := string(blackfriday.MarkdownCommon(rendered))
 
-	defs, err := dict.Defs()
-	if err == nil {
+	if defs, err := dict.Defs(); err == nil {
 		for k, v := range defs {
 			v = `<a href="#"><span title="` + v + `">` + k + `</span></a>`
 			html = strings.Replace(html, "§"+k, v, -1)
 		}
 	} else {
-		log.Printf("%v", err)
+		log.Print("Render error", err)
+		return []byte("render error")
 	}
 
 	var out bytes.Buffer
-	out.WriteString("<div class='markdown'>")
-	out.Write([]byte(html))
-	out.WriteString("</div>")
+	mustWriteString(&out, "<div class='markdown'>")
+	mustWrite(&out, []byte(html))
+	mustWriteString(&out, "</div>")
 	return out.Bytes()
 }
 
@@ -93,24 +108,24 @@ func renderImages(markdown string) []byte {
 					writer = &out
 					data := block.Bytes()
 					hasher := sha1.New()
-					hasher.Write(data)
-					hasher.Write([]byte(params))
+					mustWrite(hasher, data)
+					mustWriteString(hasher, params)
 					sha1 := hasher.Sum(nil)
 					ID := hex.EncodeToString(sha1[:])
 					filename := handler.filename(ID)
 					if !store.ExistsCache(filename) {
 						if err := handler.render(filename, params, data); err != nil {
-							out.WriteString(fmt.Sprintf("%v", err))
+							mustWriteString(&out, fmt.Sprintf("%v", err))
 							continue
 						}
 					}
-					out.WriteString("![" + imagetags + "](/cache/" + filename + ")\n")
+					mustWriteString(&out, "!["+imagetags+"](/cache/"+filename+")\n")
 					continue
 				}
 			}
 		}
-		writer.WriteString(line)
-		writer.WriteString("\n")
+		mustWriteString(writer, line)
+		mustWriteString(writer, "\n")
 	}
 
 	if inblock {

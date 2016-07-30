@@ -10,17 +10,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Auth contains the auth sessions
 type Auth struct {
 	sync.Mutex
 	sessions map[string]int64
 }
 
+// New auth
 func New() *Auth {
 	return &Auth{
 		sessions: make(map[string]int64),
 	}
 }
 
+// IsAuthorized returns if the http context contains a valid cookie
 func (a *Auth) IsAuthorized(c *gin.Context) bool {
 
 	var sessionCookie *http.Cookie
@@ -53,6 +56,7 @@ func (a *Auth) IsAuthorized(c *gin.Context) bool {
 
 }
 
+// Authorize adds a new authorization cookie
 func (a *Auth) Authorize(c *gin.Context) {
 
 	token128 := fmt.Sprintf("%x%x%x%x",

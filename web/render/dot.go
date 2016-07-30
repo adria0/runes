@@ -14,9 +14,17 @@ func filenameDot(ID string) string {
 
 func renderDot(filename string, params string, data []byte) error {
 	var dot bytes.Buffer
-	dot.WriteString("digraph G {\n")
-	dot.Write(data)
-	dot.WriteString("\n}")
+	var err error
+
+	if _, err = dot.WriteString("digraph G {\n"); err != nil {
+		return err
+	}
+	if _, err = dot.Write(data); err != nil {
+		return err
+	}
+	if _, err = dot.WriteString("\n}"); err != nil {
+		return err
+	}
 
 	dotfile, err := store.WriteTemp(filename+".dot", dot.Bytes())
 	if err != nil {

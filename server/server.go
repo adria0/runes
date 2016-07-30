@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"strconv"
 
 	"github.com/adriamb/gopad/dict"
@@ -9,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Server state definition
 type Server struct {
 	config.Config
 	Engine *gin.Engine
@@ -16,9 +18,11 @@ type Server struct {
 	Dict   *dict.Dict
 }
 
+// Srv is the global server state
 var Srv *Server
 
-func NewServer(config config.Config) {
+// Initialize the server
+func Initialize(config config.Config) {
 
 	store.InitCache(config.CacheDir, config.TmpDir)
 
@@ -38,6 +42,10 @@ func NewServer(config config.Config) {
 	Srv = &server
 }
 
-func StartServer() {
-	Srv.Engine.Run(":" + strconv.Itoa(Srv.Config.Port))
+// Start the server
+func Start() {
+	err := Srv.Engine.Run(":" + strconv.Itoa(Srv.Config.Port))
+	if err != nil {
+		log.Fatal(err)
+	}
 }

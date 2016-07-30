@@ -1,19 +1,21 @@
 package config
 
-const (
-	AuthGoogle = "google"
-	AuthNone   = "none"
-)
+// AuthGoogle is google OAuth2 authentication
+const AuthGoogle = "google"
 
+// AuthNone is no authentication
+const AuthNone = "none"
+
+// Config is the server configurtion
 type Config struct {
-	Port     int
-	Prefix   string
-	DataDir  string
-	TmpDir   string
-	CacheDir string
+	Port     int    // Port to listen to
+	Prefix   string // Prefix from root where the pages are served
+	DataDir  string // Where blog content are served
+	TmpDir   string // A temporally directory
+	CacheDir string // Cache directory for generated images
 	Auth     struct {
-		Type           string
-		GoogleClientID string
-		AllowedEmails  []string
+		Type           string   // Type of authenticatiom, AuthGoogle or AuthNone
+		GoogleClientID string   // Client id iff AuthGoogle
+		AllowedEmails  []string // Allowed emails to log in iff Authgoogle
 	}
 }

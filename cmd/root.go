@@ -25,9 +25,9 @@ var RootCmd = &cobra.Command{
 	Short: "Minimal go notepad",
 	Long:  `A minimal markdown personal notepad written in go`,
 	Run: func(cmd *cobra.Command, args []string) {
-		server.NewServer(C)
+		server.Initialize(C)
 		web.InitWeb()
-		server.StartServer()
+		server.Start()
 	},
 }
 

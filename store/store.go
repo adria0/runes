@@ -13,7 +13,7 @@ type Store struct {
 
 var filenameRunes map[rune]rune
 
-// Initializes a new store
+// NewStore initializes a new store
 func NewStore(path string) *Store {
 	search := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.ÀÁÈÉÌÍÒÓÙÚàáèéìíòóùúÑñ")
 	replace := []rune("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz0123456789-.aaeeiioouuaaeeiioouuNn")

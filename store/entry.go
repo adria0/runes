@@ -94,14 +94,20 @@ func (es *EntryStore) Store(entry *model.Entry) error {
 
 	if err == nil {
 		now := time.Now().Format(dateTimeFormat)
-		os.Rename(
+		err := os.Rename(
 			es.path+entriesPath+filename+mdExt,
 			es.path+oldentriesPath+filename+"_"+now+mdExt,
 		)
-		os.Rename(
+		if err != nil {
+			return err
+		}
+		err = os.Rename(
 			es.path+entriesPath+filename+jsonExt,
 			es.path+oldentriesPath+filename+"_"+now+jsonExt,
 		)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = es.add(entry)

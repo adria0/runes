@@ -7,20 +7,24 @@ import (
 	"github.com/adriamb/gopad/store"
 )
 
+// Dict is the user dictionary generated with "- def$: description" entries
 type Dict struct {
 	defs  map[string]string
 	store *store.Store
 }
 
+// New dictionary
 func New(store *store.Store) *Dict {
 	return &Dict{nil, store}
 }
 
+// Rebuild from current entries
 func (d *Dict) Rebuild() error {
 	d.defs = nil
 	return d.build()
 }
 
+// Defs returns the current definition map
 func (d *Dict) Defs() (map[string]string, error) {
 
 	if d.defs != nil {
