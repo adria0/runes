@@ -3,9 +3,10 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/adriamb/gopad/server"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 type userinfoStruct struct {

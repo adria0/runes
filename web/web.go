@@ -3,6 +3,13 @@
 package web
 
 import (
+	"html/template"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+	"strings"
+
 	"github.com/GeertJohan/go.rice"
 	"github.com/adriamb/gopad/model"
 	"github.com/adriamb/gopad/server"
@@ -11,12 +18,6 @@ import (
 	"github.com/adriamb/gopad/web/auth"
 	"github.com/adriamb/gopad/web/render"
 	"github.com/gin-gonic/gin"
-	"html/template"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"os"
-	"strings"
 )
 
 var aa *auth.Auth = auth.New()

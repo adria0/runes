@@ -2,11 +2,12 @@ package auth
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"math/rand"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Auth struct {

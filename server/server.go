@@ -1,11 +1,12 @@
 package server
 
 import (
+	"strconv"
+
 	"github.com/adriamb/gopad/dict"
 	"github.com/adriamb/gopad/server/config"
 	"github.com/adriamb/gopad/store"
 	"github.com/gin-gonic/gin"
-	"strconv"
 )
 
 type Server struct {

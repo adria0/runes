@@ -3,17 +3,20 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"os"
+	"os/user"
+
 	"github.com/adriamb/gopad/server"
 	"github.com/adriamb/gopad/server/config"
 	"github.com/adriamb/gopad/web"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"log"
-	"os"
-	"os/user"
 )
 
 var cfgFile string
+
+// C is the package config
 var C config.Config
 
 // RootCmd represents the base command when called without any subcommands

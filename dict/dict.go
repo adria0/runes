@@ -1,9 +1,10 @@
 package dict
 
 import (
-	"github.com/adriamb/gopad/store"
 	"strings"
 	"unicode"
+
+	"github.com/adriamb/gopad/store"
 )
 
 type Dict struct {

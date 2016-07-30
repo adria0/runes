@@ -1,10 +1,11 @@
 package web
 
 import (
-	"github.com/GeertJohan/go.rice"
-	"github.com/adriamb/gopad/model"
 	"io/ioutil"
 	"os"
+
+	"github.com/GeertJohan/go.rice"
+	"github.com/adriamb/gopad/model"
 )
 
 func existsStaticMd(id string) bool {

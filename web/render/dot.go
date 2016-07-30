@@ -3,8 +3,9 @@ package render
 import (
 	"bytes"
 	"fmt"
-	"github.com/adriamb/gopad/store"
 	"os/exec"
+
+	"github.com/adriamb/gopad/store"
 )
 
 func filenameDot(ID string) string {
