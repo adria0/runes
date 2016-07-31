@@ -33,6 +33,10 @@ h2 {
     border-radius: 6px;
 }
 
+.container {
+    width: 100%;
+}
+
 img[alt=""]      { max-width: 100%;  max-height: 400px; }
 img[alt="scale"] { max-width: 100%;  }
 img[alt="100px"] { max-width: 100px; }
