@@ -39,7 +39,7 @@ func (options *Latex) GetFlags() int {
 }
 
 // render code chunks using verbatim, or listings if we have a language
-func (options *Latex) BlockCode(out *bytes.Buffer, text []byte, lineno int, lang string) {
+func (options *Latex) BlockCode(out *bytes.Buffer, text []byte, srange SourceRange, lang string) {
 	if lang == "" {
 		out.WriteString("\n\\begin{verbatim}\n")
 	} else {
@@ -55,24 +55,24 @@ func (options *Latex) BlockCode(out *bytes.Buffer, text []byte, lineno int, lang
 	}
 }
 
-func (options *Latex) TitleBlock(out *bytes.Buffer, text []byte, lineno int) {
+func (options *Latex) TitleBlock(out *bytes.Buffer, text []byte, srange SourceRange) {
 
 }
 
-func (options *Latex) BlockQuote(out *bytes.Buffer, text []byte, lineno int) {
+func (options *Latex) BlockQuote(out *bytes.Buffer, text []byte, srange SourceRange) {
 	out.WriteString("\n\\begin{quotation}\n")
 	out.Write(text)
 	out.WriteString("\n\\end{quotation}\n")
 }
 
-func (options *Latex) BlockHtml(out *bytes.Buffer, text []byte, lineno int) {
+func (options *Latex) BlockHtml(out *bytes.Buffer, text []byte, srange SourceRange) {
 	// a pretty lame thing to do...
 	out.WriteString("\n\\begin{verbatim}\n")
 	out.Write(text)
 	out.WriteString("\n\\end{verbatim}\n")
 }
 
-func (options *Latex) Header(out *bytes.Buffer, text func() bool, level int, id string, lineno int) {
+func (options *Latex) Header(out *bytes.Buffer, text func() bool, level int, id string, srange SourceRange) {
 	marker := out.Len()
 
 	switch level {
@@ -100,7 +100,7 @@ func (options *Latex) HRule(out *bytes.Buffer) {
 	out.WriteString("\n\\HRule\n")
 }
 
-func (options *Latex) List(out *bytes.Buffer, text func() bool, lineno int, flags int) {
+func (options *Latex) List(out *bytes.Buffer, text func() bool, srange SourceRange, flags int) {
 	marker := out.Len()
 	if flags&LIST_TYPE_ORDERED != 0 {
 		out.WriteString("\n\\begin{enumerate}\n")
@@ -118,12 +118,12 @@ func (options *Latex) List(out *bytes.Buffer, text func() bool, lineno int, flag
 	}
 }
 
-func (options *Latex) ListItem(out *bytes.Buffer, text []byte, lineno int, flags int) {
+func (options *Latex) ListItem(out *bytes.Buffer, text []byte, srange SourceRange, flags int) {
 	out.WriteString("\n\\item ")
 	out.Write(text)
 }
 
-func (options *Latex) Paragraph(out *bytes.Buffer, text func() bool, lineno int) {
+func (options *Latex) Paragraph(out *bytes.Buffer, text func() bool, srange SourceRange) {
 	marker := out.Len()
 	out.WriteString("\n")
 	if !text() {
@@ -133,7 +133,7 @@ func (options *Latex) Paragraph(out *bytes.Buffer, text func() bool, lineno int)
 	out.WriteString("\n")
 }
 
-func (options *Latex) Table(out *bytes.Buffer, header []byte, body []byte, columnData []int,lineno int) {
+func (options *Latex) Table(out *bytes.Buffer, header []byte, body []byte, columnData []int,srange SourceRange) {
 	out.WriteString("\n\\begin{tabular}{")
 	for _, elt := range columnData {
 		switch elt {
@@ -152,21 +152,21 @@ func (options *Latex) Table(out *bytes.Buffer, header []byte, body []byte, colum
 	out.WriteString("\n\\end{tabular}\n")
 }
 
-func (options *Latex) TableRow(out *bytes.Buffer, text []byte, lineno int) {
+func (options *Latex) TableRow(out *bytes.Buffer, text []byte,srange SourceRange) {
 	if out.Len() > 0 {
 		out.WriteString(" \\\\\n")
 	}
 	out.Write(text)
 }
 
-func (options *Latex) TableHeaderCell(out *bytes.Buffer, text []byte, align int, lineno int) {
+func (options *Latex) TableHeaderCell(out *bytes.Buffer, text []byte, srange SourceRange, align int) {
 	if out.Len() > 0 {
 		out.WriteString(" & ")
 	}
 	out.Write(text)
 }
 
-func (options *Latex) TableCell(out *bytes.Buffer, text []byte, align int, lineno int) {
+func (options *Latex) TableCell(out *bytes.Buffer, text []byte, srange SourceRange, align int) {
 	if out.Len() > 0 {
 		out.WriteString(" & ")
 	}

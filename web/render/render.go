@@ -63,7 +63,7 @@ func mustWriteString(w io.Writer, s string) {
 	}
 }
 
-func blockRenderer (content []byte, lineno int, language string) ([]byte, error) {
+func blockRenderer (content []byte, srange blackfriday.SourceRange, language string) ([]byte, error) {
 
 	var handler renderHandler
 	var exists bool
@@ -84,7 +84,7 @@ func blockRenderer (content []byte, lineno int, language string) ([]byte, error)
 		}
 	}
 	
-	imgloc := fmt.Sprintf("<img src=/cache/%s lineno=%d><br>",filename,lineno)
+	imgloc := fmt.Sprintf("<img src=/cache/%s %s><br>",filename,srange.Attrs())
 	imglocbytes := []byte(imgloc)
 
 		return imglocbytes, nil

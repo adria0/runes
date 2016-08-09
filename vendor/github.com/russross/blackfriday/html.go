@@ -71,7 +71,7 @@ type HtmlRendererParameters struct {
 	// If set, add this text to the back of each Header ID, to ensure uniqueness.
 	HeaderIDSuffix string
 	// Prepend this text to each relative URL.
-	BlockRenderer func(content []byte, lineno int, language string) ([]byte, error)
+	BlockRenderer func(content []byte, srange SourceRange, language string) ([]byte, error)
 }
 
 // Html is a type that implements the Renderer interface for HTML output.
@@ -101,6 +101,10 @@ const (
 	xhtmlClose = " />"
 	htmlClose  = ">"
 )
+
+func (s SourceRange) Attrs() string {
+	return fmt.Sprintf("line-from=%d line-to=%d",s.From,s.To)
+}
 
 // HtmlRenderer creates and configures an Html object, which
 // satisfies the Renderer interface.
@@ -193,15 +197,15 @@ func (options *Html) GetFlags() int {
 	return options.flags
 }
 
-func (options *Html) TitleBlock(out *bytes.Buffer, text []byte, lineno int) {
+func (options *Html) TitleBlock(out *bytes.Buffer, text []byte, srange SourceRange) {
 	text = bytes.TrimPrefix(text, []byte("% "))
 	text = bytes.Replace(text, []byte("\n% "), []byte("\n"), -1)
-	out.WriteString(fmt.Sprintf("<h1 class=\"title\" lineno=%d>",lineno))
+	out.WriteString(fmt.Sprintf("<h1 class=\"title\" %s>",srange.Attrs()))
 	out.Write(text)
 	out.WriteString("\n</h1>")
 }
 
-func (options *Html) Header(out *bytes.Buffer, text func() bool, level int, id string, lineno int) {
+func (options *Html) Header(out *bytes.Buffer, text func() bool, level int, id string, srange SourceRange) {
 	marker := out.Len()
 	doubleSpace(out)
 
@@ -220,9 +224,9 @@ func (options *Html) Header(out *bytes.Buffer, text func() bool, level int, id s
 			id = id + options.parameters.HeaderIDSuffix
 		}
 
-		out.WriteString(fmt.Sprintf("<h%d lineno=%d id=\"%s\">", level, lineno, id))
+		out.WriteString(fmt.Sprintf("<h%d %s id=\"%s\">", level, srange.Attrs(), id))
 	} else {
-		out.WriteString(fmt.Sprintf("<h%d lineno=%d>", level, lineno))
+		out.WriteString(fmt.Sprintf("<h%d %s>", level, srange.Attrs()))
 	}
 
 	tocMarker := out.Len()
@@ -239,13 +243,13 @@ func (options *Html) Header(out *bytes.Buffer, text func() bool, level int, id s
 	out.WriteString(fmt.Sprintf("</h%d>\n", level))
 }
 
-func (options *Html) BlockHtml(out *bytes.Buffer, text []byte, lineno int) {
+func (options *Html) BlockHtml(out *bytes.Buffer, text []byte, srange SourceRange) {
 	if options.flags&HTML_SKIP_HTML != 0 {
 		return
 	}
 
 	doubleSpace(out)
-	out.WriteString(fmt.Sprintf("<div lineno=%d>",lineno))
+	out.WriteString(fmt.Sprintf("<div %s>",srange.Attrs()))
 	out.Write(text)
 	out.WriteString("</div>\n")
 }
@@ -257,12 +261,12 @@ func (options *Html) HRule(out *bytes.Buffer) {
 	out.WriteByte('\n')
 }
 
-func (options *Html) BlockCode(out *bytes.Buffer, text []byte, lineno int, lang string) {
+func (options *Html) BlockCode(out *bytes.Buffer, text []byte, srange SourceRange, lang string) {
 	doubleSpace(out)
 
 	if lang!="" && options.parameters.BlockRenderer != nil {
 
-		html, err := options.parameters.BlockRenderer(text,lineno,lang)
+		html, err := options.parameters.BlockRenderer(text,srange,lang)
 		if err == nil {
 			out.Write(html)
 			return
@@ -281,7 +285,7 @@ func (options *Html) BlockCode(out *bytes.Buffer, text []byte, lineno int, lang 
 			continue
 		}
 		if count == 0 {
-			out.WriteString(fmt.Sprintf("<pre><code lineno=%d class=\"language-",lineno))
+			out.WriteString(fmt.Sprintf("<pre><code %s class=\"language-",srange.Attrs()))
 		} else {
 			out.WriteByte(' ')
 		}
@@ -299,38 +303,38 @@ func (options *Html) BlockCode(out *bytes.Buffer, text []byte, lineno int, lang 
 	out.WriteString("</code></pre>\n")
 }
 
-func (options *Html) BlockQuote(out *bytes.Buffer, text []byte, lineno int) {
+func (options *Html) BlockQuote(out *bytes.Buffer, text []byte, srange SourceRange) {
 	doubleSpace(out)
-	out.WriteString(fmt.Sprintf("<blockquote lineno=%d>\n",lineno))
+	out.WriteString(fmt.Sprintf("<blockquote %s>\n",srange.Attrs()))
 	out.Write(text)
 	out.WriteString("</blockquote>\n")
 }
 
-func (options *Html) Table(out *bytes.Buffer, header []byte, body []byte, columnData []int, lineno int) {
+func (options *Html) Table(out *bytes.Buffer, header []byte, body []byte, columnData []int, srange SourceRange) {
 	doubleSpace(out)
-	out.WriteString(fmt.Sprintf("<table lineno=%d>\n<thead>\n",lineno))
+	out.WriteString(fmt.Sprintf("<table %s>\n<thead>\n",srange.Attrs()))
 	out.Write(header)
 	out.WriteString("</thead>\n\n<tbody>\n")
 	out.Write(body)
 	out.WriteString("</tbody>\n</table>\n")
 }
 
-func (options *Html) TableRow(out *bytes.Buffer, text []byte,lineno int) {
+func (options *Html) TableRow(out *bytes.Buffer, text []byte,srange SourceRange) {
 	doubleSpace(out)
-	out.WriteString(fmt.Sprintf("<tr lineno=%d>\n",lineno))
+	out.WriteString(fmt.Sprintf("<tr %s>\n",srange.Attrs()))
 	out.Write(text)
 	out.WriteString("\n</tr>\n")
 }
 
-func (options *Html) TableHeaderCell(out *bytes.Buffer, text []byte, lineno int, align int) {
+func (options *Html) TableHeaderCell(out *bytes.Buffer, text []byte, srange SourceRange, align int) {
 	doubleSpace(out)
 	switch align {
 	case TABLE_ALIGNMENT_LEFT:
-		out.WriteString(fmt.Sprintf("<th align=\"left\" lineno=%d>",lineno))
+		out.WriteString(fmt.Sprintf("<th align=\"left\" %s>",srange.Attrs()))
 	case TABLE_ALIGNMENT_RIGHT:
-		out.WriteString(fmt.Sprintf("<th align=\"right\" lineno=%d>",lineno))
+		out.WriteString(fmt.Sprintf("<th align=\"right\" %s>",srange.Attrs()))
 	case TABLE_ALIGNMENT_CENTER:
-		out.WriteString(fmt.Sprintf("<th align=\"center\" lineno=%d>",lineno))
+		out.WriteString(fmt.Sprintf("<th align=\"center\" %s>",srange.Attrs()))
 	default:
 		out.WriteString("<th>")
 	}
@@ -339,15 +343,15 @@ func (options *Html) TableHeaderCell(out *bytes.Buffer, text []byte, lineno int,
 	out.WriteString("</th>")
 }
 
-func (options *Html) TableCell(out *bytes.Buffer, text []byte, lineno int, align int) {
+func (options *Html) TableCell(out *bytes.Buffer, text []byte, srange SourceRange, align int) {
 	doubleSpace(out)
 	switch align {
 	case TABLE_ALIGNMENT_LEFT:
-		out.WriteString(fmt.Sprintf("<td align=\"left\" lineno=%d>",lineno))
+		out.WriteString(fmt.Sprintf("<td align=\"left\" %s>",srange.Attrs()))
 	case TABLE_ALIGNMENT_RIGHT:
-		out.WriteString(fmt.Sprintf("<td align=\"right\" lineno=%d>",lineno))
+		out.WriteString(fmt.Sprintf("<td align=\"right\" %s>",srange.Attrs()))
 	case TABLE_ALIGNMENT_CENTER:
-		out.WriteString(fmt.Sprintf("<td align=\"center\" lineno=%d>",lineno))
+		out.WriteString(fmt.Sprintf("<td align=\"center\" %s>",srange.Attrs()))
 	default:
 		out.WriteString("<td>")
 	}
@@ -359,7 +363,7 @@ func (options *Html) TableCell(out *bytes.Buffer, text []byte, lineno int, align
 func (options *Html) Footnotes(out *bytes.Buffer, text func() bool) {
 	out.WriteString("<div class=\"footnotes\">\n")
 	options.HRule(out)
-	options.List(out, text, -1, LIST_TYPE_ORDERED)
+	options.List(out, text, SourceRange{-1,-1}, LIST_TYPE_ORDERED)
 	out.WriteString("</div>\n")
 }
 
@@ -386,16 +390,16 @@ func (options *Html) FootnoteItem(out *bytes.Buffer, name, text []byte, flags in
 	out.WriteString("</li>\n")
 }
 
-func (options *Html) List(out *bytes.Buffer, text func() bool, lineno int, flags int) {
+func (options *Html) List(out *bytes.Buffer, text func() bool, srange SourceRange, flags int) {
 	marker := out.Len()
 	doubleSpace(out)
 
 	if flags&LIST_TYPE_DEFINITION != 0 {
-		out.WriteString(fmt.Sprintf("<dl lineno=%d>",lineno))
+		out.WriteString(fmt.Sprintf("<dl %s>",srange.Attrs()))
 	} else if flags&LIST_TYPE_ORDERED != 0 {
-		out.WriteString(fmt.Sprintf("<ol lineno=%d>",lineno))
+		out.WriteString(fmt.Sprintf("<ol %s>",srange.Attrs()))
 	} else {
-		out.WriteString(fmt.Sprintf("<ul lineno=%d>",lineno))
+		out.WriteString(fmt.Sprintf("<ul %s>",srange.Attrs()))
 	}
 	if !text() {
 		out.Truncate(marker)
@@ -410,17 +414,17 @@ func (options *Html) List(out *bytes.Buffer, text func() bool, lineno int, flags
 	}
 }
 
-func (options *Html) ListItem(out *bytes.Buffer, text []byte, lineno int, flags int) {
+func (options *Html) ListItem(out *bytes.Buffer, text []byte, srange SourceRange, flags int) {
 	if (flags&LIST_ITEM_CONTAINS_BLOCK != 0 && flags&LIST_TYPE_DEFINITION == 0) ||
 		flags&LIST_ITEM_BEGINNING_OF_LIST != 0 {
 		doubleSpace(out)
 	}
 	if flags&LIST_TYPE_TERM != 0 {
-		out.WriteString(fmt.Sprintf("<dt lineno=%d>",lineno))
+		out.WriteString(fmt.Sprintf("<dt %s>",srange.Attrs()))
 	} else if flags&LIST_TYPE_DEFINITION != 0 {
-		out.WriteString(fmt.Sprintf("<dd lineno=%d>",lineno))
+		out.WriteString(fmt.Sprintf("<dd %s>",srange.Attrs()))
 	} else {
-		out.WriteString(fmt.Sprintf("<li lineno=%d>",lineno))
+		out.WriteString(fmt.Sprintf("<li %s>",srange.Attrs()))
 	}
 	out.Write(text)
 	if flags&LIST_TYPE_TERM != 0 {
@@ -432,11 +436,11 @@ func (options *Html) ListItem(out *bytes.Buffer, text []byte, lineno int, flags 
 	}
 }
 
-func (options *Html) Paragraph(out *bytes.Buffer, text func() bool, lineno int) {
+func (options *Html) Paragraph(out *bytes.Buffer, text func() bool, srange SourceRange) {
 	marker := out.Len()
 	doubleSpace(out)
 
-	out.WriteString(fmt.Sprintf("<p lineno=%d>",lineno))
+	out.WriteString(fmt.Sprintf("<p %s>",srange.Attrs()))
 	if !text() {
 		out.Truncate(marker)
 		return

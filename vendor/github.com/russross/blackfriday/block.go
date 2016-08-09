@@ -19,10 +19,20 @@ import (
 	"github.com/shurcooL/sanitized_anchor_name"
 )
 
-func (p *parser) lineof(offset int) int {
+func (p *parser) lineof(offset int) SourceRange {
 	str := string(p.source[:offset])
-	return strings.Count(str,"\n")
+	pos :=strings.Count(str,"\n")
+	return SourceRange{pos,pos}
 }
+
+func (p *parser) lineof2(offsetFrom int, offsetTo int ) SourceRange {
+	strFrom := string(p.source[:offsetFrom])
+	posFrom :=strings.Count(strFrom,"\n")
+	strTo := string(p.source[:offsetTo])
+	posTo :=strings.Count(strTo,"\n")
+	return SourceRange{posFrom,posTo}
+}
+
 
 // Parse block-level data.
 // Note: this function and many that it calls assume that
@@ -320,7 +330,7 @@ func (p *parser) titleBlock(out *bytes.Buffer, data []byte, offset int, doRender
 	}
 
 	data = bytes.Join(splitData[0:i], []byte("\n"))
-	p.r.TitleBlock(out, data, offset)
+	p.r.TitleBlock(out, data, p.lineof(offset))
 
 	return len(data)
 }
@@ -1040,7 +1050,7 @@ func (p *parser) code(out *bytes.Buffer, data []byte, offset int) int {
 
 	work.WriteByte('\n')
 
-	p.r.BlockCode(out, work.Bytes(), offset, "")
+	p.r.BlockCode(out, work.Bytes(), p.lineof(offset), "")
 
 	return i
 }
@@ -1387,7 +1397,7 @@ func (p *parser) paragraph(out *bytes.Buffer, data []byte, offset int ) int {
 					id = sanitized_anchor_name.Create(string(data[prev:eol]))
 				}
 
-				p.r.Header(out, work, level, id, offset+i)
+				p.r.Header(out, work, level, id, p.lineof(offset+i))
 
 				// find the end of the underline
 				for data[i] != '\n' {

@@ -159,23 +159,29 @@ var blockTags = map[string]struct{}{
 // output buffer as though it had never been called.
 //
 // Currently Html and Latex implementations are provided
+
+type SourceRange struct {
+	From int
+	To   int
+}
+
 type Renderer interface {
 	// block-level callbacks
-	BlockCode(out *bytes.Buffer, text []byte, lineno int, lang string )
-	BlockQuote(out *bytes.Buffer, text []byte, lineno int )
-	BlockHtml(out *bytes.Buffer, text []byte, lineno int)
-	Header(out *bytes.Buffer, text func() bool, level int, id string, lineno int)
+	BlockCode(out *bytes.Buffer, text []byte, srange SourceRange, lang string )
+	BlockQuote(out *bytes.Buffer, text []byte, srange SourceRange )
+	BlockHtml(out *bytes.Buffer, text []byte, srange SourceRange)
+	Header(out *bytes.Buffer, text func() bool, level int, id string, srange SourceRange)
 	HRule(out *bytes.Buffer)
-	List(out *bytes.Buffer, text func() bool, lineno int, flags int)
-	ListItem(out *bytes.Buffer, text []byte, lineno int, flags int)
-	Paragraph(out *bytes.Buffer, text func() bool, lineno int)
-	Table(out *bytes.Buffer, header []byte, body []byte, columnData []int, lineno int)
-	TableRow(out *bytes.Buffer, text []byte, lineno int)
-	TableHeaderCell(out *bytes.Buffer, text []byte, lineno int, flags int)
-	TableCell(out *bytes.Buffer, text []byte, lineno int, flags int)
+	List(out *bytes.Buffer, text func() bool, srange SourceRange, flags int)
+	ListItem(out *bytes.Buffer, text []byte, srange SourceRange, flags int)
+	Paragraph(out *bytes.Buffer, text func() bool, srange SourceRange)
+	Table(out *bytes.Buffer, header []byte, body []byte, columnData []int, srange SourceRange)
+	TableRow(out *bytes.Buffer, text []byte, srange SourceRange)
+	TableHeaderCell(out *bytes.Buffer, text []byte, srange SourceRange, flags int)
+	TableCell(out *bytes.Buffer, text []byte, srange SourceRange, flags int)
 	Footnotes(out *bytes.Buffer, text func() bool)
 	FootnoteItem(out *bytes.Buffer, name, text []byte, flags int)
-	TitleBlock(out *bytes.Buffer, text []byte, lineno int)
+	TitleBlock(out *bytes.Buffer, text []byte, srange SourceRange)
 
 	// Span-level callbacks
 	AutoLink(out *bytes.Buffer, link []byte, kind int)

@@ -182,7 +182,7 @@ editor.session.selection.on("changeCursor", function(e) {
   var linepos = editor.renderer.$cursorLayer.getPixelPosition(0).top - editor.getSession().getScrollTop()
   var lineno = editor.selection.getCursor().row
 
-  var el = $("[lineno="+lineno+"]")
+  var el = $("[line-from="+lineno+"]")
 
   if (el.length > 0) {
     
