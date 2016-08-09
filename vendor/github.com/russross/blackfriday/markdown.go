@@ -161,21 +161,21 @@ var blockTags = map[string]struct{}{
 // Currently Html and Latex implementations are provided
 type Renderer interface {
 	// block-level callbacks
-	BlockCode(out *bytes.Buffer, text []byte, lang string)
-	BlockQuote(out *bytes.Buffer, text []byte)
-	BlockHtml(out *bytes.Buffer, text []byte)
-	Header(out *bytes.Buffer, text func() bool, level int, id string)
+	BlockCode(out *bytes.Buffer, text []byte, lineno int, lang string )
+	BlockQuote(out *bytes.Buffer, text []byte, lineno int )
+	BlockHtml(out *bytes.Buffer, text []byte, lineno int)
+	Header(out *bytes.Buffer, text func() bool, level int, id string, lineno int)
 	HRule(out *bytes.Buffer)
-	List(out *bytes.Buffer, text func() bool, flags int)
-	ListItem(out *bytes.Buffer, text []byte, flags int)
-	Paragraph(out *bytes.Buffer, text func() bool)
-	Table(out *bytes.Buffer, header []byte, body []byte, columnData []int)
-	TableRow(out *bytes.Buffer, text []byte)
-	TableHeaderCell(out *bytes.Buffer, text []byte, flags int)
-	TableCell(out *bytes.Buffer, text []byte, flags int)
+	List(out *bytes.Buffer, text func() bool, lineno int, flags int)
+	ListItem(out *bytes.Buffer, text []byte, lineno int, flags int)
+	Paragraph(out *bytes.Buffer, text func() bool, lineno int)
+	Table(out *bytes.Buffer, header []byte, body []byte, columnData []int, lineno int)
+	TableRow(out *bytes.Buffer, text []byte, lineno int)
+	TableHeaderCell(out *bytes.Buffer, text []byte, lineno int, flags int)
+	TableCell(out *bytes.Buffer, text []byte, lineno int, flags int)
 	Footnotes(out *bytes.Buffer, text func() bool)
 	FootnoteItem(out *bytes.Buffer, name, text []byte, flags int)
-	TitleBlock(out *bytes.Buffer, text []byte)
+	TitleBlock(out *bytes.Buffer, text []byte, lineno int)
 
 	// Span-level callbacks
 	AutoLink(out *bytes.Buffer, link []byte, kind int)
@@ -215,7 +215,9 @@ type parser struct {
 	flags          int
 	nesting        int
 	maxNesting     int
+	currentLine    int
 	insideLink     bool
+	source         []byte
 
 	// Footnotes need to be ordered as well as available to quickly check for
 	// presence. If a ref is also a footnote, it's stored both in refs and here
@@ -391,6 +393,7 @@ func MarkdownOptions(input []byte, renderer Renderer, opts Options) []byte {
 // - expand tabs (outside of fenced code blocks)
 // - copy everything else
 func firstPass(p *parser, input []byte) []byte {
+
 	var out bytes.Buffer
 	tabSize := TAB_SIZE_DEFAULT
 	if p.flags&EXTENSION_TAB_SIZE_EIGHT != 0 {
@@ -409,7 +412,7 @@ func firstPass(p *parser, input []byte) []byte {
 			// track fenced code block boundaries to suppress tab expansion
 			// and reference extraction inside them:
 			if beg >= lastFencedCodeBlockEnd {
-				if i := p.fencedCodeBlock(&out, input[beg:], false); i > 0 {
+				if i := p.fencedCodeBlock(&out, input[beg:], 0, false); i > 0 {
 					lastFencedCodeBlockEnd = beg + i
 				}
 			}
@@ -450,8 +453,10 @@ func firstPass(p *parser, input []byte) []byte {
 func secondPass(p *parser, input []byte) []byte {
 	var output bytes.Buffer
 
+	p.source = input
+
 	p.r.DocumentHeader(&output)
-	p.block(&output, input)
+	p.block(&output, input,0)
 
 	if p.flags&EXTENSION_FOOTNOTES != 0 && len(p.notes) > 0 {
 		p.r.Footnotes(&output, func() bool {
@@ -461,7 +466,7 @@ func secondPass(p *parser, input []byte) []byte {
 				var buf bytes.Buffer
 				if ref.hasBlock {
 					flags |= LIST_ITEM_CONTAINS_BLOCK
-					p.block(&buf, ref.title)
+					p.block(&buf, ref.title,99999)
 				} else {
 					p.inline(&buf, ref.title)
 				}

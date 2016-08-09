@@ -337,28 +337,21 @@ func doPOSTEntry(c *gin.Context) {
 		return
 	}
 
-	if buttonPressed(c, "btnsave") {
-
-		entry := model.Entry{
-			ID:       id,
-			Title:    c.DefaultPostForm("Title", "undefined"),
-			Markdown: c.DefaultPostForm("Markdown", "undefined"),
-		}
-
-		err := server.Srv.Store.Entry.Store(&entry)
-		if err != nil {
-			err = server.Srv.Dict.Rebuild()
-		}
-		if err != nil {
-			dumpError(c, err)
-			return
-		}
-		c.Redirect(http.StatusSeeOther, server.Srv.Config.Prefix+"/entries")
-		return
+	entry := model.Entry{
+		ID:       id,
+		Title:    c.DefaultPostForm("Title", "undefined"),
+		Markdown: c.DefaultPostForm("Markdown", "undefined"),
 	}
 
-	if buttonPressed(c, "btnback") {
-		c.Redirect(http.StatusSeeOther, server.Srv.Config.Prefix+"/entries")
+	err := server.Srv.Store.Entry.Store(&entry)
+	if err != nil {
+		err = server.Srv.Dict.Rebuild()
+	}
+	if err != nil {
+		dumpError(c, err)
 		return
 	}
+	c.Redirect(http.StatusSeeOther, server.Srv.Config.Prefix+"/entries")
+	return
+
 }

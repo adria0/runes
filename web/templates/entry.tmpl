@@ -16,41 +16,57 @@
 
 <body id="droparea">
 
-{{ template "menu.tmpl" }}
+<nav class="navbar navbar-default navbar-fixed-top">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">GoPad</a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li><a href="{{ .prefix  }}/entries"/>Cancel<span class="sr-only">(current)</span></a></li>
+ {{ if .editable }} 
+        <li><a href="#" onclick="save()">Save</a></li>
+{{ end }}
+        <li><a href="{{ .prefix }}/entries/help">Help</a></li>
+    </ul>
+   </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
 
 <div class="container">
   <div class="row">
-    <div class="col-md-12">
 
-    <form class="form-horizontal" method="post" action="{{ .prefix }}/entries/{{ .entry.ID }}/edit">
-    <input class="form-control input-large" id="title" name="Title" value="{{ .entry.Title }}" />
+    <form id="mainform" class="form-horizontal" method="post" action="{{ .prefix }}/entries/{{ .entry.ID }}/edit">
+      <input type="hidden" id="title" name="Title"/>
     
-    <h2>Markdown</h2>
+      <input type="hidden" id="markdown" name="Markdown"/>
+      
+      <div class="col-md-6 nopadding">
+        <div id="editor">
+        </div>
+      </div>
+      
+      <div class="col-md-6 nopadding" id="render">
+      </div>
     
-    <input type="hidden" id="markdown" name="Markdown"/>
-    <div class="col-md-6">
-       <div id="editor">
-       </div>
-    </div>
-    <div class="col-md-6" id="render">
-    </div>
-    </div>
-  </div>
-  <div class="row top-buffer">
-<!-- Button -->
-    <div class="col-md-12">
-{{ if .editable }} 
-        <button  name="btnsave" id="btnsave" class="btn btn-primary btn-lg">Save</button>
-{{ end }}
-        <button name="btnback" class="btn btn-normal btn-lg">Back</button>
-    </div>
-</div>
     </form>
 
-  <div class="row top-buffer">
-<div id="previews" class="dropzone-previews"></div>
-</div>
+     <div class="row top-buffer">
+       <div id="previews" class="dropzone-previews"></div>
+     </div>
+
   </div>
+</div>
 
 <script>
 
@@ -84,21 +100,32 @@ var onMarkdownChanged = function() {
   if (editor.getValue() != originalMarkdown){
     localStorage[localStorageDraft]=editor.getValue()
   }
-  var newHeight =editor.getSession().getScreenLength()* editor.renderer.lineHeight
-  $('#editor').height(newHeight.toString() + "px");
-  $('#editor-section').height(newHeight.toString() + "px");
-  editor.resize();
   updateMarkdownTimer()
 };
 
-// Set initial size to match initial content
+function updatesize() {
+      var win = $( window ) 
+      height = win.height() - 50
+      $('#editor').height( height + "px");
+      $('#render').height( height + "px");
+      editor.resize();
+}
+
+$(window).on('resize', function(){
+    updatesize()
+});
+
 onMarkdownChanged();
+updatesize();
 editor.getSession().on('change', onMarkdownChanged);
 
-$( "#btnsave" ).click(function() {
-    $("#markdown").val(editor.getValue())
+function save() {
+    var content = editor.getValue()
+    $("#markdown").val(content)
+    $("#title").val(content.split("\n")[0]);
     localStorage.removeItem(localStorageDraft)
-});
+    $('#mainform').submit();
+}
 
 function renderMarkdown (  ) {
     $.ajax({
@@ -149,6 +176,30 @@ new Dropzone(document.body, { // Make the whole body a dropzone
         editor.insert(markdown);
     }
 });
+
+editor.session.selection.on("changeCursor", function(e) {
+
+  var linepos = editor.renderer.$cursorLayer.getPixelPosition(0).top - editor.getSession().getScrollTop()
+  var lineno = editor.selection.getCursor().row
+
+  var el = $("[lineno="+lineno+"]")
+
+  if (el.length > 0) {
+    
+    var win = $( window ) 
+    var renderpos = el.position().top 
+
+
+    var diff = linepos - renderpos
+    console.debug("diff = "+diff)
+    
+    height = win.height() - 50
+
+    $("#render").css("top",diff)
+    $('#render').height( - diff + height + "px");
+
+  }
+}) 
 
 
 </script>

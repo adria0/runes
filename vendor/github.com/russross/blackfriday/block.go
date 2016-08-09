@@ -15,14 +15,19 @@ package blackfriday
 
 import (
 	"bytes"
-
+	"strings"
 	"github.com/shurcooL/sanitized_anchor_name"
 )
+
+func (p *parser) lineof(offset int) int {
+	str := string(p.source[:offset])
+	return strings.Count(str,"\n")
+}
 
 // Parse block-level data.
 // Note: this function and many that it calls assume that
 // the input buffer ends with a newline.
-func (p *parser) block(out *bytes.Buffer, data []byte) {
+func (p *parser) block(out *bytes.Buffer, data []byte, offset int) {
 	if len(data) == 0 || data[len(data)-1] != '\n' {
 		panic("block input is missing terminating newline")
 	}
@@ -35,6 +40,7 @@ func (p *parser) block(out *bytes.Buffer, data []byte) {
 
 	// parse out one block-level construct at a time
 	for len(data) > 0 {
+
 		// prefixed header:
 		//
 		// # Header 1
@@ -42,7 +48,9 @@ func (p *parser) block(out *bytes.Buffer, data []byte) {
 		// ...
 		// ###### Header 6
 		if p.isPrefixHeader(data) {
-			data = data[p.prefixHeader(out, data):]
+			i := p.prefixHeader(out, data, offset)
+			data = data[i:]
+			offset = offset + i
 			continue
 		}
 
@@ -52,8 +60,9 @@ func (p *parser) block(out *bytes.Buffer, data []byte) {
 		//     ...
 		// </div>
 		if data[0] == '<' {
-			if i := p.html(out, data, true); i > 0 {
+			if i := p.html(out, data, offset, true); i > 0 {
 				data = data[i:]
+				offset = offset + i
 				continue
 			}
 		}
@@ -65,8 +74,9 @@ func (p *parser) block(out *bytes.Buffer, data []byte) {
 		// % even more stuff
 		if p.flags&EXTENSION_TITLEBLOCK != 0 {
 			if data[0] == '%' {
-				if i := p.titleBlock(out, data, true); i > 0 {
+				if i := p.titleBlock(out, data, offset, true); i > 0 {
 					data = data[i:]
+					offset = offset + i
 					continue
 				}
 			}
@@ -75,6 +85,7 @@ func (p *parser) block(out *bytes.Buffer, data []byte) {
 		// blank lines.  note: returns the # of bytes to skip
 		if i := p.isEmpty(data); i > 0 {
 			data = data[i:]
+			offset = offset + i
 			continue
 		}
 
@@ -87,7 +98,9 @@ func (p *parser) block(out *bytes.Buffer, data []byte) {
 		//         return b
 		//      }
 		if p.codePrefix(data) > 0 {
-			data = data[p.code(out, data):]
+			i := p.code(out, data, offset)
+			data = data[i:]
+			offset = offset + i
 			continue
 		}
 
@@ -102,8 +115,9 @@ func (p *parser) block(out *bytes.Buffer, data []byte) {
 		// }
 		// ```
 		if p.flags&EXTENSION_FENCED_CODE != 0 {
-			if i := p.fencedCodeBlock(out, data, true); i > 0 {
+			if i := p.fencedCodeBlock(out, data, offset, true); i > 0 {
 				data = data[i:]
+				offset = offset + i
 				continue
 			}
 		}
@@ -121,6 +135,7 @@ func (p *parser) block(out *bytes.Buffer, data []byte) {
 			for i = 0; data[i] != '\n'; i++ {
 			}
 			data = data[i:]
+			offset = offset + i
 			continue
 		}
 
@@ -129,7 +144,9 @@ func (p *parser) block(out *bytes.Buffer, data []byte) {
 		// > A big quote I found somewhere
 		// > on the web
 		if p.quotePrefix(data) > 0 {
-			data = data[p.quote(out, data):]
+			i := p.quote(out, data, offset)
+			data = data[i:]
+			offset = offset + i
 			continue
 		}
 
@@ -140,8 +157,9 @@ func (p *parser) block(out *bytes.Buffer, data []byte) {
 		// Bob   | 31  | 555-1234
 		// Alice | 27  | 555-4321
 		if p.flags&EXTENSION_TABLES != 0 {
-			if i := p.table(out, data); i > 0 {
+			if i := p.table(out, data, offset); i > 0 {
 				data = data[i:]
+				offset = offset + i
 				continue
 			}
 		}
@@ -153,7 +171,9 @@ func (p *parser) block(out *bytes.Buffer, data []byte) {
 		//
 		// also works with + or -
 		if p.uliPrefix(data) > 0 {
-			data = data[p.list(out, data, 0):]
+			i := p.list(out, data, offset, 0)
+			data = data[i:]
+			offset = offset + i
 			continue
 		}
 
@@ -162,7 +182,9 @@ func (p *parser) block(out *bytes.Buffer, data []byte) {
 		// 1. Item 1
 		// 2. Item 2
 		if p.oliPrefix(data) > 0 {
-			data = data[p.list(out, data, LIST_TYPE_ORDERED):]
+			i := p.list(out, data, offset, LIST_TYPE_ORDERED)
+			data = data[i:]
+			offset = offset + i
 			continue
 		}
 
@@ -176,14 +198,18 @@ func (p *parser) block(out *bytes.Buffer, data []byte) {
 		// :   Definition c
 		if p.flags&EXTENSION_DEFINITION_LISTS != 0 {
 			if p.dliPrefix(data) > 0 {
-				data = data[p.list(out, data, LIST_TYPE_DEFINITION):]
+				i := p.list(out, data, offset, LIST_TYPE_DEFINITION)
+				data = data[i:]
+				offset = offset + i
 				continue
 			}
 		}
 
 		// anything else must look like a normal paragraph
 		// note: this finds underlined headers, too
-		data = data[p.paragraph(out, data):]
+		i := p.paragraph(out, data, offset )
+		data = data[i:]
+		offset = offset + i
 	}
 
 	p.nesting--
@@ -206,7 +232,7 @@ func (p *parser) isPrefixHeader(data []byte) bool {
 	return true
 }
 
-func (p *parser) prefixHeader(out *bytes.Buffer, data []byte) int {
+func (p *parser) prefixHeader(out *bytes.Buffer, data []byte, offset int) int {
 	level := 0
 	for level < 6 && data[level] == '#' {
 		level++
@@ -249,7 +275,7 @@ func (p *parser) prefixHeader(out *bytes.Buffer, data []byte) int {
 			p.inline(out, data[i:end])
 			return true
 		}
-		p.r.Header(out, work, level, id)
+		p.r.Header(out, work, level, id, p.lineof(offset))
 	}
 	return skip
 }
@@ -280,7 +306,7 @@ func (p *parser) isUnderlinedHeader(data []byte) int {
 	return 0
 }
 
-func (p *parser) titleBlock(out *bytes.Buffer, data []byte, doRender bool) int {
+func (p *parser) titleBlock(out *bytes.Buffer, data []byte, offset int, doRender bool) int {
 	if data[0] != '%' {
 		return 0
 	}
@@ -294,12 +320,12 @@ func (p *parser) titleBlock(out *bytes.Buffer, data []byte, doRender bool) int {
 	}
 
 	data = bytes.Join(splitData[0:i], []byte("\n"))
-	p.r.TitleBlock(out, data)
+	p.r.TitleBlock(out, data, offset)
 
 	return len(data)
 }
 
-func (p *parser) html(out *bytes.Buffer, data []byte, doRender bool) int {
+func (p *parser) html(out *bytes.Buffer, data []byte, offset int, doRender bool) int {
 	var i, j int
 
 	// identify the opening tag
@@ -311,17 +337,17 @@ func (p *parser) html(out *bytes.Buffer, data []byte, doRender bool) int {
 	// handle special cases
 	if !tagfound {
 		// check for an HTML comment
-		if size := p.htmlComment(out, data, doRender); size > 0 {
+		if size := p.htmlComment(out, data, offset, doRender); size > 0 {
 			return size
 		}
 
 		// check for an <hr> tag
-		if size := p.htmlHr(out, data, doRender); size > 0 {
+		if size := p.htmlHr(out, data, offset, doRender); size > 0 {
 			return size
 		}
 
 		// check for HTML CDATA
-		if size := p.htmlCDATA(out, data, doRender); size > 0 {
+		if size := p.htmlCDATA(out, data, offset, doRender); size > 0 {
 			return size
 		}
 
@@ -396,13 +422,13 @@ func (p *parser) html(out *bytes.Buffer, data []byte, doRender bool) int {
 		for end > 0 && data[end-1] == '\n' {
 			end--
 		}
-		p.r.BlockHtml(out, data[:end])
+		p.r.BlockHtml(out, data[:end], p.lineof(offset))
 	}
 
 	return i
 }
 
-func (p *parser) renderHTMLBlock(out *bytes.Buffer, data []byte, start int, doRender bool) int {
+func (p *parser) renderHTMLBlock(out *bytes.Buffer, data []byte, offset int, start int, doRender bool) int {
 	// html block needs to end with a blank line
 	if i := p.isEmpty(data[start:]); i > 0 {
 		size := start + i
@@ -412,7 +438,7 @@ func (p *parser) renderHTMLBlock(out *bytes.Buffer, data []byte, start int, doRe
 			for end > 0 && data[end-1] == '\n' {
 				end--
 			}
-			p.r.BlockHtml(out, data[:end])
+			p.r.BlockHtml(out, data[:end], p.lineof(offset))
 		}
 		return size
 	}
@@ -420,13 +446,13 @@ func (p *parser) renderHTMLBlock(out *bytes.Buffer, data []byte, start int, doRe
 }
 
 // HTML comment, lax form
-func (p *parser) htmlComment(out *bytes.Buffer, data []byte, doRender bool) int {
-	i := p.inlineHTMLComment(out, data)
-	return p.renderHTMLBlock(out, data, i, doRender)
+func (p *parser) htmlComment(out *bytes.Buffer, data []byte, offset int, doRender bool) int {
+	i := p.inlineHTMLComment(out,  data)
+	return p.renderHTMLBlock(out, data, offset, i, doRender)
 }
 
 // HTML CDATA section
-func (p *parser) htmlCDATA(out *bytes.Buffer, data []byte, doRender bool) int {
+func (p *parser) htmlCDATA(out *bytes.Buffer, data []byte, offset int, doRender bool) int {
 	const cdataTag = "<![cdata["
 	const cdataTagLen = len(cdataTag)
 	if len(data) < cdataTagLen+1 {
@@ -445,11 +471,11 @@ func (p *parser) htmlCDATA(out *bytes.Buffer, data []byte, doRender bool) int {
 	if i >= len(data) {
 		return 0
 	}
-	return p.renderHTMLBlock(out, data, i, doRender)
+	return p.renderHTMLBlock(out, data, offset, i, doRender)
 }
 
 // HR, which is the only self-closing block tag considered
-func (p *parser) htmlHr(out *bytes.Buffer, data []byte, doRender bool) int {
+func (p *parser) htmlHr(out *bytes.Buffer, data []byte, offset int, doRender bool) int {
 	if data[0] != '<' || (data[1] != 'h' && data[1] != 'H') || (data[2] != 'r' && data[2] != 'R') {
 		return 0
 	}
@@ -464,7 +490,7 @@ func (p *parser) htmlHr(out *bytes.Buffer, data []byte, doRender bool) int {
 	}
 
 	if data[i] == '>' {
-		return p.renderHTMLBlock(out, data, i+1, doRender)
+		return p.renderHTMLBlock(out, data, offset, i+1, doRender)
 	}
 
 	return 0
@@ -662,7 +688,7 @@ func isFenceLine(data []byte, syntax *string, oldmarker string, newlineOptional 
 // fencedCodeBlock returns the end index if data contains a fenced code block at the beginning,
 // or 0 otherwise. It writes to out if doRender is true, otherwise it has no side effects.
 // If doRender is true, a final newline is mandatory to recognize the fenced code block.
-func (p *parser) fencedCodeBlock(out *bytes.Buffer, data []byte, doRender bool) int {
+func (p *parser) fencedCodeBlock(out *bytes.Buffer, data []byte, offset int, doRender bool) int {
 	var syntax string
 	beg, marker := isFenceLine(data, &syntax, "", false)
 	if beg == 0 || beg >= len(data) {
@@ -698,15 +724,15 @@ func (p *parser) fencedCodeBlock(out *bytes.Buffer, data []byte, doRender bool) 
 	}
 
 	if doRender {
-		p.r.BlockCode(out, work.Bytes(), syntax)
+		p.r.BlockCode(out, work.Bytes(), p.lineof(offset), syntax)
 	}
 
 	return beg
 }
 
-func (p *parser) table(out *bytes.Buffer, data []byte) int {
+func (p *parser) table(out *bytes.Buffer, data []byte, offset int) int {
 	var header bytes.Buffer
-	i, columns := p.tableHeader(&header, data)
+	i, columns := p.tableHeader(&header, data, offset)
 	if i == 0 {
 		return 0
 	}
@@ -728,10 +754,10 @@ func (p *parser) table(out *bytes.Buffer, data []byte) int {
 
 		// include the newline in data sent to tableRow
 		i++
-		p.tableRow(&body, data[rowStart:i], columns, false)
+		p.tableRow(&body, data[rowStart:i], columns, false, offset+i)
 	}
 
-	p.r.Table(out, header.Bytes(), body.Bytes(), columns)
+	p.r.Table(out, header.Bytes(), body.Bytes(), columns, p.lineof(offset))
 
 	return i
 }
@@ -745,7 +771,7 @@ func isBackslashEscaped(data []byte, i int) bool {
 	return backslashes&1 == 1
 }
 
-func (p *parser) tableHeader(out *bytes.Buffer, data []byte) (size int, columns []int) {
+func (p *parser) tableHeader(out *bytes.Buffer, data []byte, offset int) (size int, columns []int) {
 	i := 0
 	colCount := 1
 	for i = 0; data[i] != '\n'; i++ {
@@ -843,12 +869,12 @@ func (p *parser) tableHeader(out *bytes.Buffer, data []byte) (size int, columns 
 		return
 	}
 
-	p.tableRow(out, header, columns, true)
+	p.tableRow(out, header, columns, true, offset+i)
 	size = i + 1
 	return
 }
 
-func (p *parser) tableRow(out *bytes.Buffer, data []byte, columns []int, header bool) {
+func (p *parser) tableRow(out *bytes.Buffer, data []byte, columns []int, header bool, offset int) {
 	i, col := 0, 0
 	var rowWork bytes.Buffer
 
@@ -880,24 +906,24 @@ func (p *parser) tableRow(out *bytes.Buffer, data []byte, columns []int, header 
 		p.inline(&cellWork, data[cellStart:cellEnd])
 
 		if header {
-			p.r.TableHeaderCell(&rowWork, cellWork.Bytes(), columns[col])
+			p.r.TableHeaderCell(&rowWork, cellWork.Bytes(), p.lineof(offset+i), columns[col])
 		} else {
-			p.r.TableCell(&rowWork, cellWork.Bytes(), columns[col])
+			p.r.TableCell(&rowWork, cellWork.Bytes(), p.lineof(offset+i), columns[col])
 		}
 	}
 
 	// pad it out with empty columns to get the right number
 	for ; col < len(columns); col++ {
 		if header {
-			p.r.TableHeaderCell(&rowWork, nil, columns[col])
+			p.r.TableHeaderCell(&rowWork, nil, p.lineof(offset+i), columns[col])
 		} else {
-			p.r.TableCell(&rowWork, nil, columns[col])
+			p.r.TableCell(&rowWork, nil, p.lineof(offset+i), columns[col])
 		}
 	}
 
 	// silently ignore rows with too many cells
 
-	p.r.TableRow(out, rowWork.Bytes())
+	p.r.TableRow(out, rowWork.Bytes(),p.lineof(offset+i))
 }
 
 // returns blockquote prefix length
@@ -928,7 +954,7 @@ func (p *parser) terminateBlockquote(data []byte, beg, end int) bool {
 }
 
 // parse a blockquote fragment
-func (p *parser) quote(out *bytes.Buffer, data []byte) int {
+func (p *parser) quote(out *bytes.Buffer, data []byte, offset int) int {
 	var raw bytes.Buffer
 	beg, end := 0, 0
 	for beg < len(data) {
@@ -938,7 +964,7 @@ func (p *parser) quote(out *bytes.Buffer, data []byte) int {
 		// irregardless of any contents inside it
 		for data[end] != '\n' {
 			if p.flags&EXTENSION_FENCED_CODE != 0 {
-				if i := p.fencedCodeBlock(out, data[end:], false); i > 0 {
+				if i := p.fencedCodeBlock(out, data[end:], offset, false); i > 0 {
 					// -1 to compensate for the extra end++ after the loop:
 					end += i - 1
 					break
@@ -961,8 +987,8 @@ func (p *parser) quote(out *bytes.Buffer, data []byte) int {
 	}
 
 	var cooked bytes.Buffer
-	p.block(&cooked, raw.Bytes())
-	p.r.BlockQuote(out, cooked.Bytes())
+	p.block(&cooked, raw.Bytes(),offset)
+	p.r.BlockQuote(out, cooked.Bytes(), p.lineof(offset))
 	return end
 }
 
@@ -974,7 +1000,7 @@ func (p *parser) codePrefix(data []byte) int {
 	return 0
 }
 
-func (p *parser) code(out *bytes.Buffer, data []byte) int {
+func (p *parser) code(out *bytes.Buffer, data []byte, offset int) int {
 	var work bytes.Buffer
 
 	i := 0
@@ -1014,7 +1040,7 @@ func (p *parser) code(out *bytes.Buffer, data []byte) int {
 
 	work.WriteByte('\n')
 
-	p.r.BlockCode(out, work.Bytes(), "")
+	p.r.BlockCode(out, work.Bytes(), offset, "")
 
 	return i
 }
@@ -1073,12 +1099,12 @@ func (p *parser) dliPrefix(data []byte) int {
 }
 
 // parse ordered or unordered list block
-func (p *parser) list(out *bytes.Buffer, data []byte, flags int) int {
+func (p *parser) list(out *bytes.Buffer, data []byte, offset int, flags int) int {
 	i := 0
 	flags |= LIST_ITEM_BEGINNING_OF_LIST
 	work := func() bool {
 		for i < len(data) {
-			skip := p.listItem(out, data[i:], &flags)
+			skip := p.listItem(out, data[i:], offset + i, &flags)
 			i += skip
 
 			if skip == 0 || flags&LIST_ITEM_END_OF_LIST != 0 {
@@ -1089,13 +1115,13 @@ func (p *parser) list(out *bytes.Buffer, data []byte, flags int) int {
 		return true
 	}
 
-	p.r.List(out, work, flags)
+	p.r.List(out, work, p.lineof(offset), flags)
 	return i
 }
 
 // Parse a single list item.
 // Assumes initial prefix is already removed if this is a sublist.
-func (p *parser) listItem(out *bytes.Buffer, data []byte, flags *int) int {
+func (p *parser) listItem(out *bytes.Buffer, data []byte, offset int, flags *int) int {
 	// keep track of the indentation of the first line
 	itemIndent := 0
 	for itemIndent < 3 && data[itemIndent] == ' ' {
@@ -1251,16 +1277,16 @@ gatherlines:
 	if *flags&LIST_ITEM_CONTAINS_BLOCK != 0 && *flags&LIST_TYPE_TERM == 0 {
 		// intermediate render of block item, except for definition term
 		if sublist > 0 {
-			p.block(&cooked, rawBytes[:sublist])
-			p.block(&cooked, rawBytes[sublist:])
+			p.block(&cooked, rawBytes[:sublist], offset)
+			p.block(&cooked, rawBytes[sublist:], offset+sublist)
 		} else {
-			p.block(&cooked, rawBytes)
+			p.block(&cooked, rawBytes, offset)
 		}
 	} else {
 		// intermediate render of inline item
 		if sublist > 0 {
 			p.inline(&cooked, rawBytes[:sublist])
-			p.block(&cooked, rawBytes[sublist:])
+			p.block(&cooked, rawBytes[sublist:], offset+sublist)
 		} else {
 			p.inline(&cooked, rawBytes)
 		}
@@ -1274,13 +1300,13 @@ gatherlines:
 	for parsedEnd > 0 && cookedBytes[parsedEnd-1] == '\n' {
 		parsedEnd--
 	}
-	p.r.ListItem(out, cookedBytes[:parsedEnd], *flags)
+	p.r.ListItem(out, cookedBytes[:parsedEnd], p.lineof(offset), *flags)
 
 	return line
 }
 
 // render a single paragraph that has already been parsed out
-func (p *parser) renderParagraph(out *bytes.Buffer, data []byte) {
+func (p *parser) renderParagraph(out *bytes.Buffer, data []byte, offset int) {
 	if len(data) == 0 {
 		return
 	}
@@ -1303,10 +1329,10 @@ func (p *parser) renderParagraph(out *bytes.Buffer, data []byte) {
 		p.inline(out, data[beg:end])
 		return true
 	}
-	p.r.Paragraph(out, work)
+	p.r.Paragraph(out, work, p.lineof(offset))
 }
 
-func (p *parser) paragraph(out *bytes.Buffer, data []byte) int {
+func (p *parser) paragraph(out *bytes.Buffer, data []byte, offset int ) int {
 	// prev: index of 1st char of previous line
 	// line: index of 1st char of current line
 	// i: index of cursor/end of current line
@@ -1324,11 +1350,11 @@ func (p *parser) paragraph(out *bytes.Buffer, data []byte) int {
 			// did this blank line followed by a definition list item?
 			if p.flags&EXTENSION_DEFINITION_LISTS != 0 {
 				if i < len(data)-1 && data[i+1] == ':' {
-					return p.list(out, data[prev:], LIST_TYPE_DEFINITION)
+					return p.list(out, data[prev:], offset+i, LIST_TYPE_DEFINITION)
 				}
 			}
 
-			p.renderParagraph(out, data[:i])
+			p.renderParagraph(out, data[:i], offset+i)
 			return i + n
 		}
 
@@ -1336,7 +1362,7 @@ func (p *parser) paragraph(out *bytes.Buffer, data []byte) int {
 		if i > 0 {
 			if level := p.isUnderlinedHeader(current); level > 0 {
 				// render the paragraph
-				p.renderParagraph(out, data[:prev])
+				p.renderParagraph(out, data[:prev], offset+i)
 
 				// ignore leading and trailing whitespace
 				eol := i - 1
@@ -1361,7 +1387,7 @@ func (p *parser) paragraph(out *bytes.Buffer, data []byte) int {
 					id = sanitized_anchor_name.Create(string(data[prev:eol]))
 				}
 
-				p.r.Header(out, work, level, id)
+				p.r.Header(out, work, level, id, offset+i)
 
 				// find the end of the underline
 				for data[i] != '\n' {
@@ -1373,23 +1399,23 @@ func (p *parser) paragraph(out *bytes.Buffer, data []byte) int {
 
 		// if the next line starts a block of HTML, then the paragraph ends here
 		if p.flags&EXTENSION_LAX_HTML_BLOCKS != 0 {
-			if data[i] == '<' && p.html(out, current, false) > 0 {
+			if data[i] == '<' && p.html(out, current, offset + i, false) > 0 {
 				// rewind to before the HTML block
-				p.renderParagraph(out, data[:i])
+				p.renderParagraph(out, data[:i], offset+i)
 				return i
 			}
 		}
 
 		// if there's a prefixed header or a horizontal rule after this, paragraph is over
 		if p.isPrefixHeader(current) || p.isHRule(current) {
-			p.renderParagraph(out, data[:i])
+			p.renderParagraph(out, data[:i], offset+i)
 			return i
 		}
 
 		// if there's a fenced code block, paragraph is over
 		if p.flags&EXTENSION_FENCED_CODE != 0 {
-			if p.fencedCodeBlock(out, current, false) > 0 {
-				p.renderParagraph(out, data[:i])
+			if p.fencedCodeBlock(out, current, offset, false) > 0 {
+				p.renderParagraph(out, data[:i], offset+i)
 				return i
 			}
 		}
@@ -1397,7 +1423,7 @@ func (p *parser) paragraph(out *bytes.Buffer, data []byte) int {
 		// if there's a definition list item, prev line is a definition term
 		if p.flags&EXTENSION_DEFINITION_LISTS != 0 {
 			if p.dliPrefix(current) != 0 {
-				return p.list(out, data[prev:], LIST_TYPE_DEFINITION)
+				return p.list(out, data[prev:], offset+i, LIST_TYPE_DEFINITION)
 			}
 		}
 
@@ -1407,7 +1433,7 @@ func (p *parser) paragraph(out *bytes.Buffer, data []byte) int {
 				p.oliPrefix(current) != 0 ||
 				p.quotePrefix(current) != 0 ||
 				p.codePrefix(current) != 0 {
-				p.renderParagraph(out, data[:i])
+				p.renderParagraph(out, data[:i], offset+i)
 				return i
 			}
 		}
@@ -1419,6 +1445,6 @@ func (p *parser) paragraph(out *bytes.Buffer, data []byte) int {
 		i++
 	}
 
-	p.renderParagraph(out, data[:i])
+	p.renderParagraph(out, data[:i], offset+i)
 	return i
 }
