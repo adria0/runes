@@ -25,7 +25,7 @@ func (p *parser) lineof(offset int) SourceRange {
 	return SourceRange{pos,pos}
 }
 
-func (p *parser) lineof2(offsetFrom int, offsetTo int ) SourceRange {
+func (p *parser) linesof(offsetFrom int, offsetTo int ) SourceRange {
 	strFrom := string(p.source[:offsetFrom])
 	posFrom :=strings.Count(strFrom,"\n")
 	strTo := string(p.source[:offsetTo])
@@ -1316,7 +1316,7 @@ gatherlines:
 }
 
 // render a single paragraph that has already been parsed out
-func (p *parser) renderParagraph(out *bytes.Buffer, data []byte, offset int) {
+func (p *parser) renderParagraph(out *bytes.Buffer, data []byte, offsetBegin, offsetEnd int) {
 	if len(data) == 0 {
 		return
 	}
@@ -1339,7 +1339,7 @@ func (p *parser) renderParagraph(out *bytes.Buffer, data []byte, offset int) {
 		p.inline(out, data[beg:end])
 		return true
 	}
-	p.r.Paragraph(out, work, p.lineof(offset))
+	p.r.Paragraph(out, work, p.linesof(offsetBegin,offsetEnd))
 }
 
 func (p *parser) paragraph(out *bytes.Buffer, data []byte, offset int ) int {
@@ -1360,11 +1360,11 @@ func (p *parser) paragraph(out *bytes.Buffer, data []byte, offset int ) int {
 			// did this blank line followed by a definition list item?
 			if p.flags&EXTENSION_DEFINITION_LISTS != 0 {
 				if i < len(data)-1 && data[i+1] == ':' {
-					return p.list(out, data[prev:], offset+i, LIST_TYPE_DEFINITION)
+					return p.list(out, data[prev:], offset, LIST_TYPE_DEFINITION)
 				}
 			}
 
-			p.renderParagraph(out, data[:i], offset+i)
+			p.renderParagraph(out, data[:i], offset, offset+i)
 			return i + n
 		}
 
@@ -1372,7 +1372,7 @@ func (p *parser) paragraph(out *bytes.Buffer, data []byte, offset int ) int {
 		if i > 0 {
 			if level := p.isUnderlinedHeader(current); level > 0 {
 				// render the paragraph
-				p.renderParagraph(out, data[:prev], offset+i)
+				p.renderParagraph(out, data[:prev], offset,offset+prev)
 
 				// ignore leading and trailing whitespace
 				eol := i - 1
@@ -1411,21 +1411,21 @@ func (p *parser) paragraph(out *bytes.Buffer, data []byte, offset int ) int {
 		if p.flags&EXTENSION_LAX_HTML_BLOCKS != 0 {
 			if data[i] == '<' && p.html(out, current, offset + i, false) > 0 {
 				// rewind to before the HTML block
-				p.renderParagraph(out, data[:i], offset+i)
+				p.renderParagraph(out, data[:i], offset, offset+i)
 				return i
 			}
 		}
 
 		// if there's a prefixed header or a horizontal rule after this, paragraph is over
 		if p.isPrefixHeader(current) || p.isHRule(current) {
-			p.renderParagraph(out, data[:i], offset+i)
+			p.renderParagraph(out, data[:i], offset, offset+i)
 			return i
 		}
 
 		// if there's a fenced code block, paragraph is over
 		if p.flags&EXTENSION_FENCED_CODE != 0 {
 			if p.fencedCodeBlock(out, current, offset, false) > 0 {
-				p.renderParagraph(out, data[:i], offset+i)
+				p.renderParagraph(out, data[:i], offset, offset+i)
 				return i
 			}
 		}
@@ -1443,7 +1443,7 @@ func (p *parser) paragraph(out *bytes.Buffer, data []byte, offset int ) int {
 				p.oliPrefix(current) != 0 ||
 				p.quotePrefix(current) != 0 ||
 				p.codePrefix(current) != 0 {
-				p.renderParagraph(out, data[:i], offset+i)
+				p.renderParagraph(out, data[:i], offset, offset+i)
 				return i
 			}
 		}
@@ -1455,6 +1455,6 @@ func (p *parser) paragraph(out *bytes.Buffer, data []byte, offset int ) int {
 		i++
 	}
 
-	p.renderParagraph(out, data[:i], offset+i)
+	p.renderParagraph(out, data[:i], offset, offset+i)
 	return i
 }

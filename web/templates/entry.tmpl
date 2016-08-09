@@ -106,8 +106,8 @@ var onMarkdownChanged = function() {
 function updatesize() {
       var win = $( window ) 
       height = win.height() - 50
-      $('#editor').height( height + "px");
-      $('#render').height( height + "px");
+      $('#editor').css("height", height + "px");
+      $('#render').css("height", height + "px");
       editor.resize();
 }
 
@@ -135,8 +135,11 @@ function renderMarkdown (  ) {
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function(data){
+              $('#render').css("height", "auto")
               $("#render").html(data.html);
-	      $(".markdown table").addClass("table table-condensed");
+              $("#render").data("totalheight", $("#render").height());
+              $('#render').css("height", height + "px");
+	            $(".markdown table").addClass("table table-condensed");
         },
             failure: function(errMsg) {
             alert(errMsg);
@@ -177,26 +180,66 @@ new Dropzone(document.body, { // Make the whole body a dropzone
     }
 });
 
+var lastSelected = null
+
 editor.session.selection.on("changeCursor", function(e) {
 
-  var linepos = editor.renderer.$cursorLayer.getPixelPosition(0).top - editor.getSession().getScrollTop()
-  var lineno = editor.selection.getCursor().row
+  menubarheight = 50
+  jumpstep = 100
 
+  // unselect the last element
+  if (lastSelected != null) {
+    lastSelected.css("background-color","#fff")  
+  }
+
+  var lineno = editor.selection.getCursor().row
   var el = $("[line-from="+lineno+"]")
 
+  // If element found
   if (el.length > 0) {
+
+    // select the element
+    el.css("background-color","#eee")  
+    lastSelected = el
     
+    // the real size of the render
+    var totalheight = $("#render").data("totalheight")
+
+    // the size of the drawing area
     var win = $( window ) 
-    var renderpos = el.position().top 
+    var height = win.height() - menubarheight
+
+    // the position of the render from the start div
+    var renderpos = el.position().top + $("#render").position().top - menubarheight
+
+    console.log("rp="+renderpos+" h="+height)
+
+    if ( renderpos < 0 ) {
+
+      var diff =  el.position().top   
+
+      $("#render").css("top",( -diff ) + "px")
+      $('#render').css("height", ( height + diff ) + "px")
+      return
+
+    }
 
 
-    var diff = linepos - renderpos
-    console.debug("diff = "+diff)
-    
-    height = win.height() - 50
+    if ( renderpos + el.height() > height ) {
 
-    $("#render").css("top",diff)
-    $('#render').height( - diff + height + "px");
+      var diff =  ( el.position().top + el.height() ) - height 
+      
+      $("#render").css("top",( -diff ) + "px")
+      $('#render').css("height", ( height + diff ) + "px")
+
+      return
+    }
+
+    // the position of the cursor from the start div
+    // var linepos = editor.renderer.$cursorLayer.getPixelPosition(0).top - editor.getSession().getScrollTop()
+
+    // the diffence between the cursor and the matching element
+ 
 
   }
 }) 

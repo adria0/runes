@@ -395,11 +395,11 @@ func (options *Html) List(out *bytes.Buffer, text func() bool, srange SourceRang
 	doubleSpace(out)
 
 	if flags&LIST_TYPE_DEFINITION != 0 {
-		out.WriteString(fmt.Sprintf("<dl %s>",srange.Attrs()))
+		out.WriteString(fmt.Sprintf("<dl>"))
 	} else if flags&LIST_TYPE_ORDERED != 0 {
-		out.WriteString(fmt.Sprintf("<ol %s>",srange.Attrs()))
+		out.WriteString(fmt.Sprintf("<ol>"))
 	} else {
-		out.WriteString(fmt.Sprintf("<ul %s>",srange.Attrs()))
+		out.WriteString(fmt.Sprintf("<ul>"))
 	}
 	if !text() {
 		out.Truncate(marker)
