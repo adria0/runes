@@ -2,12 +2,12 @@ package render
 
 import (
 	"bytes"
-	"strings"
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
+	"strings"
 
 	"github.com/adriamb/gopad/dict"
 	"github.com/adriamb/gopad/store"
@@ -22,7 +22,7 @@ type renderHandler struct {
 const (
 	extPNG = ".png"
 
-	commonHtmlFlags = 0 |
+	commonHTMLFlags = 0 |
 		blackfriday.HTML_USE_XHTML |
 		blackfriday.HTML_USE_SMARTYPANTS |
 		blackfriday.HTML_SMARTYPANTS_FRACTIONS |
@@ -39,9 +39,7 @@ const (
 		blackfriday.EXTENSION_HEADER_IDS |
 		blackfriday.EXTENSION_BACKSLASH_LINE_BREAK |
 		blackfriday.EXTENSION_DEFINITION_LISTS
-
 )
-
 
 var (
 	renderHandlers = map[string]renderHandler{
@@ -64,13 +62,12 @@ func mustWriteString(w io.Writer, s string) {
 	}
 }
 
-func blockRenderer (content []byte, srange blackfriday.SourceRange, langAndParams string) ([]byte, error) {
+func blockRenderer(content []byte, srange blackfriday.SourceRange, langAndParams string) ([]byte, error) {
 
 	var handler renderHandler
 	var exists bool
 
-
-	lap := strings.Split(langAndParams,":")
+	lap := strings.Split(langAndParams, ":")
 	language := lap[0]
 
 	var class = ""
@@ -79,7 +76,7 @@ func blockRenderer (content []byte, srange blackfriday.SourceRange, langAndParam
 	}
 
 	if handler, exists = renderHandlers[language]; !exists {
-		return nil,fmt.Errorf("Handle for language "+language+" does not exist")
+		return nil, fmt.Errorf("Handle for language " + language + " does not exist")
 	}
 
 	hasher := sha1.New()
@@ -93,38 +90,37 @@ func blockRenderer (content []byte, srange blackfriday.SourceRange, langAndParam
 			return nil, err
 		}
 	}
-	
-	imgloc := fmt.Sprintf("<img src=/cache/%s class=\""+class+"\" %s><br>",filename,srange.Attrs())
+
+	imgloc := fmt.Sprintf("<img src=/cache/%s class=\""+class+"\" %s><br>", filename, srange.Attrs())
 	imglocbytes := []byte(imgloc)
 
-		return imglocbytes, nil
+	return imglocbytes, nil
 }
-
 
 // Render a markdown into html
 func Render(markdown string, dict *dict.Dict) []byte {
 
 	params := blackfriday.HtmlRendererParameters{
-		BlockRenderer : blockRenderer,
+		BlockRenderer: blockRenderer,
 	}
 
-	renderer := blackfriday.HtmlRendererWithParameters(commonHtmlFlags, "", "", params)
+	renderer := blackfriday.HtmlRendererWithParameters(commonHTMLFlags, "", "", params)
 
 	html := blackfriday.Markdown([]byte(markdown), renderer, commonExtensions)
 
-/*
-	html := string(blackfriday.MarkdownCommon(rendered))
+	/*
+		html := string(blackfriday.MarkdownCommon(rendered))
 
-	if defs, err := dict.Defs(); err == nil {
-		for k, v := range defs {
-			v = `<a href="#"><span title="` + v + `">` + k + `</span></a>`
-			html = strings.Replace(html, "§"+k, v, -1)
+		if defs, err := dict.Defs(); err == nil {
+			for k, v := range defs {
+				v = `<a href="#"><span title="` + v + `">` + k + `</span></a>`
+				html = strings.Replace(html, "§"+k, v, -1)
+			}
+		} else {
+			log.Print("Render error", err)
+			return []byte("render error")
 		}
-	} else {
-		log.Print("Render error", err)
-		return []byte("render error")
-	}
-*/
+	*/
 
 	var out bytes.Buffer
 	mustWriteString(&out, "<div class='markdown'>")

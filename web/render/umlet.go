@@ -21,7 +21,6 @@ type xmlTemplate struct {
 	Code string
 }
 
-
 const xmltemplate = `
 <diagram program="umlet" version="14.1.1">
 <zoom_level>10</zoom_level>
@@ -42,7 +41,7 @@ const xmltemplate = `
 func renderUmlet(filename string, params string, data []byte) error {
 
 	tparams := xmlTemplate{
-		X:    0, Y: 0, W: 200, H: 400,
+		X: 0, Y: 0, W: 200, H: 400,
 		Code: string(data),
 	}
 
