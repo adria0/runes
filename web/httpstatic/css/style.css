@@ -35,7 +35,7 @@ h2 {
 }
 
 #render {
-    overflow: hidden;
+    overflow-y: auto;
 }
 
 .top-buffer { margin-top:20px;  }
