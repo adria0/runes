@@ -55,6 +55,67 @@ h2 {
     width: 100%;
 }
 
+.w100 {
+    max-width: 100px; 
+    height: auto;    
+}
+
+.w200 {
+    max-width: 200px; 
+    height: auto;    
+}
+
+.w300 {
+    max-width: 300px; 
+    height: auto;    
+}
+
+.w400 {
+    max-width: 400px; 
+    height: auto;    
+}
+
+.w500 {
+    max-width: 500px; 
+    height: auto;    
+}
+
+.w600 {
+    max-width: 600px; 
+    height: auto;    
+}
+
+.h100 {
+    max-height: 100px; 
+    width: auto;    
+}
+
+.h200 {
+    max-height: 200px; 
+    width: auto;    
+}
+
+.h300 {
+    max-height: 300px; 
+    width: auto;    
+}
+
+.h400 {
+    max-height: 400px; 
+    width: auto;    
+}
+
+.h500 {
+    max-height: 500px; 
+    width: auto;    
+}
+
+.h600 {
+    max-height: 600px; 
+    width: auto;    
+}
+
+
 img[alt=""]      { max-width: 100%;  max-height: 400px; }
 img[alt="scale"] { max-width: 100%;  }
 img[alt="100px"] { max-width: 100px; }

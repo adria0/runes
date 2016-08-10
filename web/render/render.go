@@ -2,6 +2,7 @@ package render
 
 import (
 	"bytes"
+	"strings"
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
@@ -63,13 +64,22 @@ func mustWriteString(w io.Writer, s string) {
 	}
 }
 
-func blockRenderer (content []byte, srange blackfriday.SourceRange, language string) ([]byte, error) {
+func blockRenderer (content []byte, srange blackfriday.SourceRange, langAndParams string) ([]byte, error) {
 
 	var handler renderHandler
 	var exists bool
 
+
+	lap := strings.Split(langAndParams,":")
+	language := lap[0]
+
+	var class = ""
+	if len(lap) > 1 {
+		class = lap[1]
+	}
+
 	if handler, exists = renderHandlers[language]; !exists {
-		return nil,fmt.Errorf("Handle for this language does not exist")
+		return nil,fmt.Errorf("Handle for language "+language+" does not exist")
 	}
 
 	hasher := sha1.New()
@@ -84,7 +94,7 @@ func blockRenderer (content []byte, srange blackfriday.SourceRange, language str
 		}
 	}
 	
-	imgloc := fmt.Sprintf("<img src=/cache/%s %s><br>",filename,srange.Attrs())
+	imgloc := fmt.Sprintf("<img src=/cache/%s class=\""+class+"\" %s><br>",filename,srange.Attrs())
 	imglocbytes := []byte(imgloc)
 
 		return imglocbytes, nil
