@@ -21,12 +21,30 @@ type renderHandler struct {
 
 const (
 	extPNG = ".png"
+
+	commonHTMLFlags = 0 |
+		blackfriday.HTML_USE_XHTML |
+		blackfriday.HTML_USE_SMARTYPANTS |
+		blackfriday.HTML_SMARTYPANTS_FRACTIONS |
+		blackfriday.HTML_SMARTYPANTS_DASHES |
+		blackfriday.HTML_SMARTYPANTS_LATEX_DASHES
+
+	commonExtensions = 0 |
+		blackfriday.EXTENSION_NO_INTRA_EMPHASIS |
+		blackfriday.EXTENSION_TABLES |
+		blackfriday.EXTENSION_FENCED_CODE |
+		blackfriday.EXTENSION_AUTOLINK |
+		blackfriday.EXTENSION_STRIKETHROUGH |
+		blackfriday.EXTENSION_SPACE_HEADERS |
+		blackfriday.EXTENSION_HEADER_IDS |
+		blackfriday.EXTENSION_BACKSLASH_LINE_BREAK |
+		blackfriday.EXTENSION_DEFINITION_LISTS
 )
 
 var (
 	renderHandlers = map[string]renderHandler{
-		"dot":   {filenameDot, renderDot},
-		"umlet": {filenameUmlet, renderUmlet},
+		"dot":      {filenameDot, renderDot},
+		"umletseq": {filenameUmlet, renderUmlet},
 	}
 )
 
@@ -44,93 +62,69 @@ func mustWriteString(w io.Writer, s string) {
 	}
 }
 
+func blockRenderer(content []byte, srange blackfriday.SourceRange, langAndParams string) ([]byte, error) {
+
+	var handler renderHandler
+	var exists bool
+
+	lap := strings.Split(langAndParams, ":")
+	language := lap[0]
+
+	var class = ""
+	if len(lap) > 1 {
+		class = lap[1]
+	}
+
+	if handler, exists = renderHandlers[language]; !exists {
+		return nil, fmt.Errorf("Handle for language " + language + " does not exist")
+	}
+
+	hasher := sha1.New()
+	mustWrite(hasher, content)
+	sha1 := hasher.Sum(nil)
+	ID := hex.EncodeToString(sha1[:])
+	filename := handler.filename(ID)
+
+	if !store.ExistsCache(filename) {
+		if err := handler.render(filename, "", content); err != nil {
+			return nil, err
+		}
+	}
+
+	imgloc := fmt.Sprintf("<img src=/cache/%s class=\""+class+"\" %s><br>", filename, srange.Attrs())
+	imglocbytes := []byte(imgloc)
+
+	return imglocbytes, nil
+}
+
 // Render a markdown into html
 func Render(markdown string, dict *dict.Dict) []byte {
 
-	rendered := renderImages(markdown)
-	html := string(blackfriday.MarkdownCommon(rendered))
-
-	if defs, err := dict.Defs(); err == nil {
-		for k, v := range defs {
-			v = `<a href="#"><span title="` + v + `">` + k + `</span></a>`
-			html = strings.Replace(html, "§"+k, v, -1)
-		}
-	} else {
-		log.Print("Render error", err)
-		return []byte("render error")
+	params := blackfriday.HtmlRendererParameters{
+		BlockRenderer: blockRenderer,
 	}
+
+	renderer := blackfriday.HtmlRendererWithParameters(commonHTMLFlags, "", "", params)
+
+	html := blackfriday.Markdown([]byte(markdown), renderer, commonExtensions)
+
+	/*
+		html := string(blackfriday.MarkdownCommon(rendered))
+
+		if defs, err := dict.Defs(); err == nil {
+			for k, v := range defs {
+				v = `<a href="#"><span title="` + v + `">` + k + `</span></a>`
+				html = strings.Replace(html, "§"+k, v, -1)
+			}
+		} else {
+			log.Print("Render error", err)
+			return []byte("render error")
+		}
+	*/
 
 	var out bytes.Buffer
 	mustWriteString(&out, "<div class='markdown'>")
 	mustWrite(&out, []byte(html))
 	mustWriteString(&out, "</div>")
-	return out.Bytes()
-}
-
-func renderImages(markdown string) []byte {
-	var out bytes.Buffer
-	var block bytes.Buffer
-	var handler renderHandler
-	var imagetags string
-	var params string
-
-	lines := strings.Split(markdown, "\n")
-	inblock := false
-	writer := &out
-
-	for _, line := range lines {
-		if strings.HasPrefix(line, "```") {
-			inblock = !inblock
-			if inblock {
-				blocktype := strings.TrimSpace(line[3:])
-				if strings.Contains(blocktype, ";") {
-					split := strings.Split(blocktype, ";")
-					blocktype = split[0]
-					imagetags = split[1]
-				} else {
-					imagetags = ""
-				}
-				if strings.Contains(blocktype, ":") {
-					split := strings.Split(blocktype, ":")
-					blocktype = split[0]
-					params = split[1]
-				} else {
-					params = ""
-				}
-				var exists bool
-				if handler, exists = renderHandlers[blocktype]; exists {
-					block = bytes.Buffer{}
-					writer = &block
-					continue
-				}
-			} else {
-				if writer == &block {
-					writer = &out
-					data := block.Bytes()
-					hasher := sha1.New()
-					mustWrite(hasher, data)
-					mustWriteString(hasher, params)
-					sha1 := hasher.Sum(nil)
-					ID := hex.EncodeToString(sha1[:])
-					filename := handler.filename(ID)
-					if !store.ExistsCache(filename) {
-						if err := handler.render(filename, params, data); err != nil {
-							mustWriteString(&out, fmt.Sprintf("%v", err))
-							continue
-						}
-					}
-					mustWriteString(&out, "!["+imagetags+"](/cache/"+filename+")\n")
-					continue
-				}
-			}
-		}
-		mustWriteString(writer, line)
-		mustWriteString(writer, "\n")
-	}
-
-	if inblock {
-		return []byte("Unaligned blocks")
-	}
-
 	return out.Bytes()
 }

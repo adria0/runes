@@ -68,7 +68,7 @@ c->t
 
 ## UMLet sequence diagrams
 
-```umlet:sequence
+```umletseq
 obj=Usr~usr
 obj=App~app
 

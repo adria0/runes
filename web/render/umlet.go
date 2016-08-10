@@ -14,7 +14,6 @@ func filenameUmlet(ID string) string {
 }
 
 type xmlTemplate struct {
-	Type string
 	X    int
 	Y    int
 	W    int
@@ -22,18 +21,11 @@ type xmlTemplate struct {
 	Code string
 }
 
-var (
-	diagramTypes = map[string]string{
-		"sequence": "UMLSequenceAllInOne",
-		"class":    "UMLClass",
-	}
-)
-
 const xmltemplate = `
 <diagram program="umlet" version="14.1.1">
 <zoom_level>10</zoom_level>
 <element>
-<id>{{ .Type }}</id>
+<id>UMLSequenceAllInOne</id>
 <coordinates>
 <x>{{ .X }}</x>
 <y>{{ .Y }}</y>
@@ -48,14 +40,8 @@ const xmltemplate = `
 
 func renderUmlet(filename string, params string, data []byte) error {
 
-	umltype, found := diagramTypes[params]
-	if !found {
-		return fmt.Errorf("Bad type " + params)
-	}
-
 	tparams := xmlTemplate{
-		Type: umltype,
-		X:    0, Y: 0, W: 200, H: 400,
+		X: 0, Y: 0, W: 200, H: 400,
 		Code: string(data),
 	}
 

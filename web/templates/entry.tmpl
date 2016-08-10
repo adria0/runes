@@ -16,41 +16,61 @@
 
 <body id="droparea">
 
-{{ template "menu.tmpl" }}
+<nav class="navbar navbar-default navbar-fixed-top">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">GoPad</a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li><a href="{{ .prefix  }}/entries"/>Cancel<span class="sr-only">(current)</span></a></li>
+ {{ if .editable }} 
+        <li><a href="#" onclick="save()">Save</a></li>
+{{ end }}
+        <li><button class="btn btn-default navbar-btn" id="sync">Sync</button></li>
+        <li><button class="btn btn-default navbar-btn" id="split3">&#188;</button></li>
+        <li><button class="btn btn-default navbar-btn" id="split6">&#189;</button></li>
+        <li><button class="btn btn-default navbar-btn" id="split9">&#190;</button></li>
+        <li><button class="btn btn-default navbar-btn" id="split12">F</button></li>
+        <li><a href="{{ .prefix }}/entries/help">Help</a></li>
+    </ul>
+   </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
 
 <div class="container">
   <div class="row">
-    <div class="col-md-12">
 
-    <form class="form-horizontal" method="post" action="{{ .prefix }}/entries/{{ .entry.ID }}/edit">
-    <input class="form-control input-large" id="title" name="Title" value="{{ .entry.Title }}" />
+    <form id="mainform" class="form-horizontal" method="post" action="{{ .prefix }}/entries/{{ .entry.ID }}/edit">
+      <input type="hidden" id="title" name="Title"/>
+      <input type="hidden" id="markdown" name="Markdown"/>
+      
+      <div class="col-md-6 nopadding" id="editordiv"><div class="col-md-12">
+        <div id="editor">
+        </div>
+      </div></div>
+      
+      <div class="col-md-6 nopadding" id="render"><div class="col-md-12">
+      </div></div>
     
-    <h2>Markdown</h2>
-    
-    <input type="hidden" id="markdown" name="Markdown"/>
-    <div class="col-md-6">
-       <div id="editor">
-       </div>
-    </div>
-    <div class="col-md-6" id="render">
-    </div>
-    </div>
-  </div>
-  <div class="row top-buffer">
-<!-- Button -->
-    <div class="col-md-12">
-{{ if .editable }} 
-        <button  name="btnsave" id="btnsave" class="btn btn-primary btn-lg">Save</button>
-{{ end }}
-        <button name="btnback" class="btn btn-normal btn-lg">Back</button>
-    </div>
-</div>
     </form>
 
-  <div class="row top-buffer">
-<div id="previews" class="dropzone-previews"></div>
-</div>
+     <div class="row top-buffer">
+       <div id="previews" class="dropzone-previews"></div>
+     </div>
+
   </div>
+</div>
 
 <script>
 
@@ -84,21 +104,32 @@ var onMarkdownChanged = function() {
   if (editor.getValue() != originalMarkdown){
     localStorage[localStorageDraft]=editor.getValue()
   }
-  var newHeight =editor.getSession().getScreenLength()* editor.renderer.lineHeight
-  $('#editor').height(newHeight.toString() + "px");
-  $('#editor-section').height(newHeight.toString() + "px");
-  editor.resize();
   updateMarkdownTimer()
 };
 
-// Set initial size to match initial content
+function updatesize() {
+      var win = $( window ) 
+      height = win.height() - 50
+      $('#editor').css("height", height + "px");
+      $('#render').css("height", height + "px");
+      editor.resize();
+}
+
+$(window).on('resize', function(){
+    updatesize()
+});
+
 onMarkdownChanged();
+updatesize();
 editor.getSession().on('change', onMarkdownChanged);
 
-$( "#btnsave" ).click(function() {
-    $("#markdown").val(editor.getValue())
+function save() {
+    var content = editor.getValue()
+    $("#markdown").val(content)
+    $("#title").val(content.split("\n")[0]);
     localStorage.removeItem(localStorageDraft)
-});
+    $('#mainform').submit();
+}
 
 function renderMarkdown (  ) {
     $.ajax({
@@ -108,8 +139,12 @@ function renderMarkdown (  ) {
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function(data){
+              $('#render').css("height", "auto")
               $("#render").html(data.html);
-	      $(".markdown table").addClass("table table-condensed");
+              $("#render").data("totalheight", $("#render").height());
+              $('#render').css("height", height + "px");
+              doSync(true);
+	            $(".markdown table").addClass("table table-condensed");
         },
             failure: function(errMsg) {
             alert(errMsg);
@@ -131,6 +166,51 @@ $( window ).on('beforeunload',function() {
     }
 });
 
+/* split -------------------------------------------- */
+
+var splitPositions = [3,6,9,12]
+
+function splitScreen(columns) {
+
+    if (columns > 0 && columns < 12 ) {
+      $("#editordiv").attr("display","block")
+      $("#editordiv").attr("class","col-md-"+columns+" nopadding")
+      $("#render").attr("display","block")
+      $("#render").attr("class","col-md-"+(12-columns)+" nopadding")
+    }
+
+    if (columns == 12) {
+      $("#editordiv").attr("display","block")
+      $("#editordiv").attr("class","col-md-12 nopadding")
+      $("#render").attr("display","none")
+      $("#render").attr("class","col-md-0 nopadding")
+    }
+
+    for ( index = 0 ; index < splitPositions.length; index++  ) {
+        var sp = splitPositions[index] 
+        if (sp == columns) {
+          $("#split"+sp).removeClass("btn-default");
+          $("#split"+sp).addClass("btn-primary");
+        } else {
+          $("#split"+sp).removeClass("btn-primary");
+          $("#split"+sp).addClass("btn-default");
+        }
+    }
+}
+
+function createSplitScreenCall(columns) {
+    return function() { splitScreen(columns); }
+}
+
+for ( index = 0 ; index < splitPositions.length; index++  ) {
+    var sp = splitPositions[index] 
+     $("#split"+sp).click(createSplitScreenCall(sp))
+}
+
+splitScreen(6)
+
+/* drag & drop -------------------------------------- */
+
 new Dropzone(document.body, { // Make the whole body a dropzone
     url: "/entries/{{ .entry.ID }}/edit/files",
     previewsContainer: "#previews", // Define the container to display the previews
@@ -149,6 +229,95 @@ new Dropzone(document.body, { // Make the whole body a dropzone
         editor.insert(markdown);
     }
 });
+
+/* Cursor sync stuff --------------------------------------- */
+
+var lastSelected = null
+var sync = true
+
+$("#sync").click( function() {
+    setSync(!sync);
+})
+
+function setSync(val) {
+    sync = val
+    if (sync) {
+        $("#sync").removeClass("btn-default");
+        $("#sync").addClass("btn-primary");
+    } else {
+        $("#sync").removeClass("btn-primary");
+        $("#sync").addClass("btn-default");
+    }
+}
+
+editor.session.selection.on("changeCursor", function(e) {
+  doSync(false);
+})
+
+function doSync(fullredraw) {
+
+  if (!sync) {
+    return
+  }
+
+  menubarheight = 50
+
+  // unselect the last element
+
+  if (lastSelected != null && !fullredraw) {
+    lastSelected.css("background-color","#fff")  
+  }
+
+  // Find the element that belongs to this line
+
+  var lineno = editor.selection.getCursor().row
+  var el = null
+  elements = $("*[line-from]")
+  for (i=0 ; i< elements.length ; i ++) {
+    if ( lineno >= parseInt(elements[i].attributes["line-from"].value)  &&
+         lineno <= parseInt(elements[i].attributes["line-to"].value) ) {
+  
+        el = $(elements[i])
+        break
+    }
+  }
+
+  // If element found
+  if (el != null ) {
+
+    // select the element
+    el.css("background-color","#eee")  
+    lastSelected = el
+
+    var renderSize = Math.round($("#render").height())
+    var scrollPos = Math.round($('#render').scrollTop())
+    var elementPos = Math.round(el.position().top)
+
+    scrollTo = null
+
+    if (elementPos < 0 ) {
+      scrollTo = scrollPos - ( renderSize - elementPos ) - renderSize*0.25
+
+      if (scrollTo < renderSize) {
+        scrollTo = 0
+      }
+
+    } else if (elementPos > renderSize ) {
+      scrollTo = scrollPos + ( elementPos - renderSize ) + renderSize*0.25
+
+    } 
+
+    if (scrollTo != null ) {
+      $('#render').animate({
+        scrollTop: scrollTo
+      }, 'fast');
+    }
+
+  }
+}
+
+setSync(true);
+
 
 
 </script>
