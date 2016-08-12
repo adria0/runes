@@ -20,7 +20,7 @@ const (
 	entriesPath    = "/entries/"
 	jsonExt        = ".json"
 	mdExt          = ".md"
-	dateTimeFormat = "20060102150405"
+	DateTimeFormat = "20060102150405"
 )
 
 var (
@@ -79,7 +79,7 @@ func (es *EntryStore) add(entry *model.Entry) error {
 // NewID creates a new entry identifier
 func (es *EntryStore) NewID() string {
 
-	return time.Now().Format(dateTimeFormat)
+	return time.Now().Format(DateTimeFormat)
 
 }
 
@@ -93,17 +93,17 @@ func (es *EntryStore) Store(entry *model.Entry) error {
 	}
 
 	if err == nil {
-		now := time.Now().Format(dateTimeFormat)
+		now := time.Now().Format(DateTimeFormat)
 		err := os.Rename(
 			es.path+entriesPath+filename+mdExt,
-			es.path+oldentriesPath+filename+"_"+now+mdExt,
+			es.path+oldentriesPath+entry.ID+"_"+now+mdExt,
 		)
 		if err != nil {
 			return err
 		}
 		err = os.Rename(
 			es.path+entriesPath+filename+jsonExt,
-			es.path+oldentriesPath+filename+"_"+now+jsonExt,
+			es.path+oldentriesPath+entry.ID+"_"+now+jsonExt,
 		)
 		if err != nil {
 			return err
@@ -118,9 +118,16 @@ func (es *EntryStore) Store(entry *model.Entry) error {
 	return nil
 }
 
-func (es *EntryStore) get(filename string) (*model.Entry, error) {
+func (es *EntryStore) get(filename string, old bool) (*model.Entry, error) {
 
-	rawjson, err := ioutil.ReadFile(es.path + entriesPath + filename + jsonExt)
+    var path string
+    if old {
+        path = es.path + oldentriesPath
+    } else {
+        path = es.path + entriesPath
+    }
+
+	rawjson, err := ioutil.ReadFile(path + filename + jsonExt)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +137,7 @@ func (es *EntryStore) get(filename string) (*model.Entry, error) {
 		return nil, err
 	}
 
-	rawentry, err := ioutil.ReadFile(es.path + entriesPath + filename + mdExt)
+	rawentry, err := ioutil.ReadFile(path + filename + mdExt)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +154,50 @@ func (es *EntryStore) Get(ID string) (*model.Entry, error) {
 		return nil, err
 	}
 
-	entry, err := es.get(filename)
+	entry, err := es.get(filename,false)
+	if err != nil {
+		return nil, err
+	}
+
+	return entry, nil
+}
+
+
+// Get retrieves the versions of an entry
+func (es *EntryStore) GetVersions(ID string) ([]string, error) {
+
+ 	fileInfos, err := ioutil.ReadDir(es.path + oldentriesPath)
+
+	if err != nil {
+		return nil, err
+	}
+
+    versions := []string{}
+
+	prefix := ID + "_"
+	suffix := mdExt
+	for _, fileInfo := range fileInfos {
+		if !fileInfo.IsDir() {
+			name := fileInfo.Name()
+            if strings.HasPrefix(name, prefix) && strings.HasSuffix(name, suffix) {
+                versionLength := strings.Index(name[len(prefix):],".")
+                if versionLength == -1 {
+                    // Bad file?
+                    continue
+                }
+                version := name[len(prefix):len(prefix)+versionLength]
+                versions = append(versions,version)
+			}
+		}
+	}
+
+	return versions,nil
+}
+
+// Get an specific version
+func (es *EntryStore) GetVersion(ID string, version string) (*model.Entry, error) {
+
+	entry, err := es.get(ID+"_"+version,true)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +246,7 @@ func (es *EntryStore) List() ([]*model.Entry, error) {
 			if pos == -1 {
 				return nil, fmt.Errorf("Bad filename %v", name)
 			}
-			entry, err := es.get(name[:pos])
+			entry, err := es.get(name[:pos],false)
 			if err != nil {
 				return nil, err
 			}
@@ -241,7 +291,7 @@ func (es *EntryStore) Search(expr string) ([]SearchResult, error) {
 				return nil, fmt.Errorf("Bad filename %v", name)
 			}
 
-			entry, err := es.get(name[:pos])
+			entry, err := es.get(name[:pos],false)
 			if err != nil {
 				return nil, err
 			}
