@@ -20,6 +20,8 @@ const (
 	entriesPath    = "/entries/"
 	jsonExt        = ".json"
 	mdExt          = ".md"
+
+	// DateTimeFormat is the  format used to generate version timestamps
 	DateTimeFormat = "20060102150405"
 )
 
@@ -120,12 +122,12 @@ func (es *EntryStore) Store(entry *model.Entry) error {
 
 func (es *EntryStore) get(filename string, old bool) (*model.Entry, error) {
 
-    var path string
-    if old {
-        path = es.path + oldentriesPath
-    } else {
-        path = es.path + entriesPath
-    }
+	var path string
+	if old {
+		path = es.path + oldentriesPath
+	} else {
+		path = es.path + entriesPath
+	}
 
 	rawjson, err := ioutil.ReadFile(path + filename + jsonExt)
 	if err != nil {
@@ -154,7 +156,7 @@ func (es *EntryStore) Get(ID string) (*model.Entry, error) {
 		return nil, err
 	}
 
-	entry, err := es.get(filename,false)
+	entry, err := es.get(filename, false)
 	if err != nil {
 		return nil, err
 	}
@@ -162,42 +164,41 @@ func (es *EntryStore) Get(ID string) (*model.Entry, error) {
 	return entry, nil
 }
 
-
-// Get retrieves the versions of an entry
+// GetVersions retrieves the versions of an entry
 func (es *EntryStore) GetVersions(ID string) ([]string, error) {
 
- 	fileInfos, err := ioutil.ReadDir(es.path + oldentriesPath)
+	fileInfos, err := ioutil.ReadDir(es.path + oldentriesPath)
 
 	if err != nil {
 		return nil, err
 	}
 
-    versions := []string{}
+	versions := []string{}
 
 	prefix := ID + "_"
 	suffix := mdExt
 	for _, fileInfo := range fileInfos {
 		if !fileInfo.IsDir() {
 			name := fileInfo.Name()
-            if strings.HasPrefix(name, prefix) && strings.HasSuffix(name, suffix) {
-                versionLength := strings.Index(name[len(prefix):],".")
-                if versionLength == -1 {
-                    // Bad file?
-                    continue
-                }
-                version := name[len(prefix):len(prefix)+versionLength]
-                versions = append(versions,version)
+			if strings.HasPrefix(name, prefix) && strings.HasSuffix(name, suffix) {
+				versionLength := strings.Index(name[len(prefix):], ".")
+				if versionLength == -1 {
+					// Bad file?
+					continue
+				}
+				version := name[len(prefix) : len(prefix)+versionLength]
+				versions = append(versions, version)
 			}
 		}
 	}
 
-	return versions,nil
+	return versions, nil
 }
 
-// Get an specific version
+// GetVersion retrieves an specific version
 func (es *EntryStore) GetVersion(ID string, version string) (*model.Entry, error) {
 
-	entry, err := es.get(ID+"_"+version,true)
+	entry, err := es.get(ID+"_"+version, true)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +247,7 @@ func (es *EntryStore) List() ([]*model.Entry, error) {
 			if pos == -1 {
 				return nil, fmt.Errorf("Bad filename %v", name)
 			}
-			entry, err := es.get(name[:pos],false)
+			entry, err := es.get(name[:pos], false)
 			if err != nil {
 				return nil, err
 			}
@@ -291,7 +292,7 @@ func (es *EntryStore) Search(expr string) ([]SearchResult, error) {
 				return nil, fmt.Errorf("Bad filename %v", name)
 			}
 
-			entry, err := es.get(name[:pos],false)
+			entry, err := es.get(name[:pos], false)
 			if err != nil {
 				return nil, err
 			}

@@ -3,24 +3,30 @@
 package web
 
 import (
-	"net/http"
-	"os"
-	"strings"
-    "sort"
-	"time"
-    "github.com/adriamb/gopad/store"
-    "github.com/adriamb/gopad/model"
+	"github.com/adriamb/gopad/model"
 	"github.com/adriamb/gopad/server"
+	"github.com/adriamb/gopad/store"
 	"github.com/adriamb/gopad/web/render"
 	"github.com/gin-gonic/gin"
+	"net/http"
+	"os"
+	"sort"
+	"strings"
+	"time"
 )
 
 const (
-    versionDateTimeDisplay = "2006-01-02 15:04:05"
+	versionDateTimeDisplay = "2006-01-02 15:04:05"
 )
 
 type dtoMarkdownRender struct {
 	Markdown string `json:"markdown" binding:"required"`
+}
+
+// Version of an entry
+type Version struct {
+	Description string
+	URL         string
 }
 
 func doPOSTUpload(c *gin.Context) {
@@ -68,20 +74,14 @@ func doPOSTMarkdown(c *gin.Context) {
 	}
 }
 
-type Version struct {
-    Description string
-    URL         string
-}
-
 func doGETEntry(c *gin.Context) {
 
-
-    id := c.Param("id")
+	id := c.Param("id")
 
 	var entry *model.Entry
 	var err error
 	var editable = true
-    versions := []Version{}
+	versions := []Version{}
 
 	if id != "new" {
 
@@ -92,47 +92,47 @@ func doGETEntry(c *gin.Context) {
 
 		} else {
 
-            if strings.Contains(id,".") {
+			if strings.Contains(id, ".") {
 
-                split := strings.SplitN(id,".",2)
-                id = split[0]
-                version := split[1]
-			    entry, err = server.Srv.Store.Entry.GetVersion(id,version)
-                editable = false
+				split := strings.SplitN(id, ".", 2)
+				id = split[0]
+				version := split[1]
+				entry, err = server.Srv.Store.Entry.GetVersion(id, version)
+				editable = false
 
-            } else {
+			} else {
 
-                entry, err = server.Srv.Store.Entry.Get(id)
+				entry, err = server.Srv.Store.Entry.Get(id)
 
-            }
+			}
 
-            if err == nil {
+			if err == nil {
 
-                versions = append ( versions , Version {
-                    Description: "Last",
-                    URL: "/entries/"+id+"/edit",
-                })
+				versions = append(versions, Version{
+					Description: "Last",
+					URL:         "/entries/" + id + "/edit",
+				})
 
-                var versionids []string
-                versionids, err = server.Srv.Store.Entry.GetVersions(id)
-                sort.Sort(sort.Reverse(sort.StringSlice(versionids)))
+				var versionids []string
+				versionids, err = server.Srv.Store.Entry.GetVersions(id)
+				sort.Sort(sort.Reverse(sort.StringSlice(versionids)))
 
-                if len(versionids) > 15 {
-                    versionids = versionids[:15]
-                }
+				if len(versionids) > 15 {
+					versionids = versionids[:15]
+				}
 
-                for _, versionid:= range versionids {
-                    t, timeerr := time.Parse(store.DateTimeFormat,versionid)
+				for _, versionid := range versionids {
+					t, timeerr := time.Parse(store.DateTimeFormat, versionid)
 
-                    if timeerr == nil {
-                        versions = append ( versions , Version {
-                            Description: t.Format( versionDateTimeDisplay ),
-                            URL: "/entries/"+id+"."+versionid+"/edit",
-                        } )
-                    }
-                }
-            }
-        }
+					if timeerr == nil {
+						versions = append(versions, Version{
+							Description: t.Format(versionDateTimeDisplay),
+							URL:         "/entries/" + id + "." + versionid + "/edit",
+						})
+					}
+				}
+			}
+		}
 
 		if err != nil {
 			dumpError(c, err)
@@ -141,17 +141,17 @@ func doGETEntry(c *gin.Context) {
 
 	} else {
 
-        entry = &model.Entry{
+		entry = &model.Entry{
 			ID: server.Srv.Store.Entry.NewID(),
 		}
 
-    }
+	}
 
 	c.HTML(http.StatusOK, "entry.tmpl", gin.H{
 		"prefix":   server.Srv.Config.Prefix,
 		"entry":    entry,
 		"editable": editable,
-        "versions": versions,
+		"versions": versions,
 	})
 
 }
