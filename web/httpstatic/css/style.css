@@ -160,4 +160,6 @@ img[alt="600px"] { max-width: 600px; }
     margin: 0 !important;
 }
 
-
+.btn-space {
+    margin-right: 5px;
+}

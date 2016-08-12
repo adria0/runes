@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,18 +13,22 @@
 
 {{template "menu.tmpl"}}
 
+
 <div class="container">
- {{ range $file := .files }}
     <div class="row">
       <div class="col-lg-2 col-md-1 col-sm-1"></div>
       <div class="col-lg-8 col-md-10 col-sm-10" id="text">
-          <a href="{{ $.prefix  }}/files/{{ $file }}">{{ $file }}</a>
-        </div>
+ 
+<h1>Files</h1>
+{{ range $file := .files }}
+         <a href="{{ $.prefix  }}/files/{{ $file }}">{{ $file }}</a>
+         <hr />
+{{ end }}
+
       </div>
       <div class="col-lg-2 col-md-1 col-sm-1"></div>
-    <hr />
-  {{ end }}
-
+    </div>
+</div>
 </body>
 </html>
 
