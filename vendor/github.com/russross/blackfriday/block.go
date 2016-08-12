@@ -1310,7 +1310,7 @@ gatherlines:
 	for parsedEnd > 0 && cookedBytes[parsedEnd-1] == '\n' {
 		parsedEnd--
 	}
-	p.r.ListItem(out, cookedBytes[:parsedEnd], p.lineof(offset), *flags)
+	p.r.ListItem(out, cookedBytes[:parsedEnd], p.linesof(offset,offset+line-1), *flags)
 
 	return line
 }
