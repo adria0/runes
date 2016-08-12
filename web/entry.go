@@ -69,7 +69,7 @@ func doPOSTUpload(c *gin.Context) {
 func doPOSTMarkdown(c *gin.Context) {
 	var json dtoMarkdownRender
 	if c.BindJSON(&json) == nil {
-		html := string(render.Render(json.Markdown, server.Srv.Dict))
+		html := string(render.Render(json.Markdown))
 		c.JSON(http.StatusOK, gin.H{"html": html})
 	}
 }
@@ -171,9 +171,6 @@ func doPOSTEntry(c *gin.Context) {
 	}
 
 	err := server.Srv.Store.Entry.Store(&entry)
-	if err != nil {
-		err = server.Srv.Dict.Rebuild()
-	}
 	if err != nil {
 		dumpError(c, err)
 		return

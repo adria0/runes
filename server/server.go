@@ -4,7 +4,6 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/adriamb/gopad/dict"
 	"github.com/adriamb/gopad/server/config"
 	"github.com/adriamb/gopad/store"
 	"github.com/gin-gonic/gin"
@@ -15,7 +14,6 @@ type Server struct {
 	config.Config
 	Engine *gin.Engine
 	Store  *store.Store
-	Dict   *dict.Dict
 }
 
 // Srv is the global server state
@@ -36,7 +34,6 @@ func Initialize(config config.Config) {
 		Engine: g,
 		Config: config,
 		Store:  store,
-		Dict:   dict.New(store),
 	}
 
 	Srv = &server

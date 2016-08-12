@@ -16,7 +16,7 @@ import (
 
 var markdownRender = template.FuncMap{
 	"markdown": func(s string) template.HTML {
-		proc := string(render.Render(s, server.Srv.Dict))
+		proc := string(render.Render(s))
 		return template.HTML(proc)
 	},
 }
