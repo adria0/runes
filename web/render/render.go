@@ -9,7 +9,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/adriamb/gopad/dict"
 	"github.com/adriamb/gopad/store"
 	"github.com/russross/blackfriday"
 )
@@ -98,7 +97,7 @@ func blockRenderer(content []byte, srange blackfriday.SourceRange, langAndParams
 }
 
 // Render a markdown into html
-func Render(markdown string, dict *dict.Dict) []byte {
+func Render(markdown string) []byte {
 
 	params := blackfriday.HtmlRendererParameters{
 		BlockRenderer: blockRenderer,
@@ -107,20 +106,6 @@ func Render(markdown string, dict *dict.Dict) []byte {
 	renderer := blackfriday.HtmlRendererWithParameters(commonHTMLFlags, "", "", params)
 
 	html := blackfriday.Markdown([]byte(markdown), renderer, commonExtensions)
-
-	/*
-		html := string(blackfriday.MarkdownCommon(rendered))
-
-		if defs, err := dict.Defs(); err == nil {
-			for k, v := range defs {
-				v = `<a href="#"><span title="` + v + `">` + k + `</span></a>`
-				html = strings.Replace(html, "§"+k, v, -1)
-			}
-		} else {
-			log.Print("Render error", err)
-			return []byte("render error")
-		}
-	*/
 
 	var out bytes.Buffer
 	mustWriteString(&out, "<div class='markdown'>")

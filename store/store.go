@@ -15,8 +15,10 @@ var filenameRunes map[rune]rune
 
 // NewStore initializes a new store
 func NewStore(path string) *Store {
+
 	search := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.ÀÁÈÉÌÍÒÓÙÚàáèéìíòóùúÑñ")
 	replace := []rune("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz0123456789-.aaeeiioouuaaeeiioouuNn")
+
 	filenameRunes = make(map[rune]rune)
 
 	for i := range search {
