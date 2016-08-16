@@ -10,7 +10,7 @@
 </head>
 <body>
 
-{{template "menu.tmpl"}}
+{{template "menu.tmpl" . }}
 
 <div class="container">
  {{ if .results }}
@@ -19,7 +19,7 @@
       <div class="col-lg-2 col-md-1 col-sm-1"></div>
       <div class="col-lg-8 col-md-10 col-sm-10" id="text">
           <h3>
-          <a href="{{ $.prefix  }}/entries/{{ $result.ID }}">{{ $result.Title }}</a>
+          <a href="{{ $.prefix  }}/w/{{ $.ws }}/e/{{ $result.ID }}">{{ $result.Title }}</a>
           </h3>
        </div>
       <div class="col-lg-2 col-md-1 col-sm-1"></div>

@@ -61,32 +61,42 @@ func InitWeb() {
 		server.Srv.Engine.StaticFS("/static", http.Dir("web/httpstatic"))
 	}
 
+	server.Srv.Engine.GET("/", doGETLogin)
 	server.Srv.Engine.GET("/login", doGETLogin)
 
 	authorized := server.Srv.Engine.Group("/")
 	authorized.Use(checkAuthorization())
 
-	authorized.GET("/", doGETEntries)
+	authorized.GET("/w/:ws", doGETEntries)
+	authorized.GET("/w/:ws/f", doGETFiles)
+	authorized.POST("/w/:ws/search", doPOSTSearch)
+
+	authorized.GET("/w/:ws/e/:id", doGETEntries)
+	authorized.GET("/w/:ws/e/:id/edit", doGETEntry)
+	authorized.POST("/w/:ws/e/:id", doPOSTEntry)
+	authorized.POST("/w/:ws/e/:id/f", doPOSTUpload)
+	authorized.GET("/w/:ws/e/:id/f/:name", doGETFile)
+
 	authorized.POST("/logingoauth2", doPOSTGoogleOauth2Login)
-	authorized.GET("/entries", doGETEntries)
-	authorized.GET("/entries/:id", doGETEntries)
-	authorized.GET("/entries/:id/edit", doGETEntry)
-	authorized.POST("/entries/:id/edit", doPOSTEntry)
-	authorized.POST("/markdown", doPOSTMarkdown)
-	authorized.POST("/entries/:id/edit/files", doPOSTUpload)
-	authorized.GET("/files/:id", doGETFile)
-	authorized.GET("/files", doGETFiles)
-	authorized.GET("/cache/:id", doGETCache)
-	authorized.POST("/search", doPOSTSearch)
+	authorized.POST("/render", doPOSTRender)
+	authorized.GET("/cache/:hash", doGETCache)
 }
 
 func doGETFile(c *gin.Context) {
-	file := server.Srv.Store.File.Fullpath(c.Param("id"))
+
+	ID := store.Normalize(c.Param("id"))
+	ws := store.Normalize(c.Param("ws"))
+	name := store.Normalize(c.Param("name"))
+
+	file := server.Srv.Store.Entry.FilePath(ws, ID, name)
 	c.File(file)
 }
 
 func doGETCache(c *gin.Context) {
-	file := store.GetCachePath(c.Param("id"))
+
+	hash := store.Normalize(c.Param("hash"))
+
+	file := store.GetCachePath(hash)
 	c.File(file)
 }
 

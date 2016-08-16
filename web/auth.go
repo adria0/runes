@@ -27,7 +27,7 @@ func doGETLogin(c *gin.Context) {
 
 	if server.Srv.Config.Auth.Type == config.AuthNone {
 		aa.Authorize(c)
-		c.Redirect(http.StatusSeeOther, server.Srv.Config.Prefix+"/entries")
+		c.Redirect(http.StatusSeeOther, server.Srv.Config.Prefix+"/w/default")
 		return
 	}
 

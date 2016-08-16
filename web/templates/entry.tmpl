@@ -32,7 +32,7 @@
     <!-- Collect the nav links, forms, and other content for toggling -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav">
-        <li><a href="{{ .prefix  }}/entries"/>Cancel<span class="sr-only">(current)</span></a></li>
+        <li><a href="{{ .prefix  }}/w/{{ .ws  }}"/>Cancel<span class="sr-only">(current)</span></a></li>
 {{ if .editable }} 
         <li><a href="#" onclick="save()">Save</a></li>
 {{ end }}
@@ -49,7 +49,13 @@
 {{ end }}
             </ul>
         </li>    
-        <li><a href="{{ .prefix }}/entries/help/edit">Help</a></li>
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Special<span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="#" onclick="javascript:delete()">Delete</a></li>
+            </ul>
+        </li>    
+        <li><a href="{{ .prefix }}/w/builtin/help/edit">Help</a></li>
     </ul>
    </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->
@@ -59,7 +65,7 @@
 <div class="container">
   <div class="row">
 
-    <form id="mainform" class="form-horizontal" method="post" action="{{ .prefix }}/entries/{{ .entry.ID }}/edit">
+    <form id="mainform" class="form-horizontal" method="post" action="{{ .prefix }}/w/{{ .ws }}/e/{{ .entry.ID }}">
       <input type="hidden" id="title" name="Title"/>
       <input type="hidden" id="markdown" name="Markdown"/>
       
@@ -142,7 +148,7 @@ function save() {
 function renderMarkdown (  ) {
     $.ajax({
         type: "POST",
-        url: "{{ .prefix  }}/markdown",
+        url: "{{ .prefix  }}/render",
         data: JSON.stringify({ Markdown: editor.getValue()  }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -224,7 +230,7 @@ splitScreen(6)
 {{ if .editable  }} 
 
 new Dropzone(document.body, { // Make the whole body a dropzone
-    url: "/entries/{{ .entry.ID }}/edit/files",
+    url: "/w/{{ .ws }}/e/{{ .entry.ID }}/f",
     previewsContainer: "#previews", // Define the container to display the previews
     clickable: "#previews", // Define the element that should be used as click trigger to select files.
     addedfile: function(file) { console.log(file);  },

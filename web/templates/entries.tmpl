@@ -14,8 +14,7 @@
 </head>
 <body>
 
-{{template "menu.tmpl"}}
-
+{{template "menu.tmpl" .}}
 
 <div class="container">
  {{ range $entry := .entries }}
@@ -23,8 +22,8 @@
       <div class="col-lg-2 col-md-1 col-sm-1"></div>
       <div class="col-lg-8 col-md-10 col-sm-10" id="text">
           {{ $entry.Markdown | markdown }}
-          <a href="{{ $.prefix }}/entries/{{ $entry.ID }}" class="btn btn-default pull-right btn-sm">View</a>
-          <a href="{{ $.prefix }}/entries/{{ $entry.ID }}/edit" class="btn btn-default pull-right btn-sm btn-space">Edit</a>
+          <a href="{{ $.prefix }}/w/{{ $.ws }}/e/{{ $entry.ID }}" class="btn btn-default pull-right btn-sm">View</a>
+          <a href="{{ $.prefix }}/w/{{ $.ws }}/e/{{ $entry.ID }}/edit" class="btn btn-default pull-right btn-sm btn-space">Edit</a>
         </div>
       </div>
       <div class="col-lg-2 col-md-1 col-sm-1"></div>
