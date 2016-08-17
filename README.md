@@ -8,7 +8,6 @@ GoPad is a web application, with the following features:
 - **Markdown** support with github flavour
 - **Realtime render**: All data written in the markdown are automatically rendered
 - **Graphviz (dot)** support
-- **Sequence diagrams** support via UMLlet
 - **Attachments** support, just drag&drop
 - **No database** , all data are written into the filesystem with .md and .json files. If you want to backup the data, just copy the folder, or create a git repo for it.
 - **No data is overwritten**, attachments cannot be overwritten, page changes are versioned
@@ -38,7 +37,6 @@ Gopad uses the following configuration file, by default located in $HOME/.gopad 
 
 ```yaml
 port: <server port, e.g. 8080>
-prefix: <server prefix, left it blank>
 datadir: <where data is stored, by default is $HOME/.gopad>
 tmpdir: <temp directory, by default is /tmp/gopad/tmp>
 cachedir: <cache directory, by default is /tmp/gopad/tmp>
@@ -69,20 +67,6 @@ The syntax for dot is (note that the `digraph {}` element are automatically adde
         }
         ```
 
-## Support for UMLet
-
-Gopad uses umlet as an external command, and, since it's a java application needs java jre to be installed in order to work.
-
-At this moment there's only support for sequence diagrams in the following form:
-
-      ```umlet:sequence
-      obj=Usr~usr
-      obj=App~app
-      
-      usr->app
-      app->app +:ACT=CreateKeyPair
-      app->usr:show PIN=\nhash pbkACT
-      ```
 
 
 
