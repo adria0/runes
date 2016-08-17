@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/adriamb/gopad/server"
 	"github.com/adriamb/gopad/server/config"
+	"github.com/adriamb/gopad/server/instance"
 	"github.com/adriamb/gopad/web/auth"
 	"github.com/gin-gonic/gin"
 )
@@ -25,18 +25,18 @@ func checkAuthorization() gin.HandlerFunc {
 
 func doGETLogin(c *gin.Context) {
 
-	if server.Srv.Config.Auth.Type == config.AuthNone {
+	if instance.Srv.Config.Auth.Type == config.AuthNone {
 		aa.Authorize(c)
 		c.Redirect(http.StatusSeeOther, "/w/default")
 		return
 	}
 
-	if server.Srv.Config.Auth.Type == config.AuthGoogle {
+	if instance.Srv.Config.Auth.Type == config.AuthGoogle {
 
 		var err error
 
 		c.HTML(http.StatusOK, "logingoauth2.tmpl", gin.H{
-			"googleclientid": server.Srv.Config.Auth.GoogleClientID,
+			"googleclientid": instance.Srv.Config.Auth.GoogleClientID,
 			"error":          err,
 		})
 		return
@@ -44,7 +44,7 @@ func doGETLogin(c *gin.Context) {
 	}
 
 	log.Fatalf("Server authentication type '%v' is not known.",
-		server.Srv.Config.Auth.Type)
+		instance.Srv.Config.Auth.Type)
 
 }
 
@@ -55,7 +55,7 @@ func doPOSTGoogleOauth2Login(c *gin.Context) {
 	err := aa.AuthorizeGoogleOauth2(c, oauthtoken)
 	if err != nil {
 		c.HTML(http.StatusOK, "logingoauth2.tmpl", gin.H{
-			"error":  err,
+			"error": err,
 		})
 	} else {
 		c.Redirect(http.StatusSeeOther, "/w/default")

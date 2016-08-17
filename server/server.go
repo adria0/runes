@@ -5,22 +5,14 @@ import (
 	"strconv"
 
 	"github.com/adriamb/gopad/server/config"
+	"github.com/adriamb/gopad/server/instance"
 	"github.com/adriamb/gopad/store"
+	"github.com/adriamb/gopad/web"
 	"github.com/gin-gonic/gin"
 )
 
-// Server state definition
-type Server struct {
-	config.Config
-	Engine *gin.Engine
-	Store  *store.Store
-}
-
-// Srv is the global server state
-var Srv *Server
-
 // Initialize the server
-func Initialize(config config.Config) {
+func startServer(config config.Config) {
 
 	store.InitCache(config.CacheDir, config.TmpDir)
 
@@ -30,19 +22,17 @@ func Initialize(config config.Config) {
 
 	store := store.NewStore(config.DataDir)
 
-	server := Server{
+	instance.Srv = &instance.Server{
 		Engine: g,
 		Config: config,
 		Store:  store,
 	}
 
-	Srv = &server
-}
+	web.Initialize()
 
-// Start the server
-func Start() {
-	err := Srv.Engine.Run(":" + strconv.Itoa(Srv.Config.Port))
+	err := instance.Srv.Engine.Run(":" + strconv.Itoa(instance.Srv.Config.Port))
 	if err != nil {
 		log.Fatal(err)
 	}
+
 }

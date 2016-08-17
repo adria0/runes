@@ -21,11 +21,3 @@ func NewStore(path string) *Store {
 
 	return &store
 }
-
-func Normalize(filename string) string {
-
-    // TODO
-
-    return filename
-}
-

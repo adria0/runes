@@ -1,18 +1,16 @@
 package web
 
 import (
-	"io/ioutil"
 	"github.com/gin-gonic/gin"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/GeertJohan/go.rice"
-	"github.com/adriamb/gopad/store"
 )
-
 
 func doGETBuiltin(c *gin.Context) {
 
-	id := store.Normalize(c.Param("id"))
+	id := normalize(c.Param("id"))
 
 	var content string
 
@@ -22,7 +20,7 @@ func doGETBuiltin(c *gin.Context) {
 	} else {
 		bytes, err := ioutil.ReadFile("web/builtin/" + id + ".md")
 		if err == nil {
-		    content = string(bytes)
+			content = string(bytes)
 		}
 	}
 
@@ -37,4 +35,3 @@ func doGETBuiltin(c *gin.Context) {
 		"error":   err,
 	})
 }
-

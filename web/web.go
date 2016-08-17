@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/GeertJohan/go.rice"
-	"github.com/adriamb/gopad/server"
+	"github.com/adriamb/gopad/server/instance"
 	"github.com/adriamb/gopad/store"
 	"github.com/adriamb/gopad/web/render"
 	"github.com/gin-gonic/gin"
@@ -23,7 +23,7 @@ var markdownRender = template.FuncMap{
 
 func generateTemplate() *template.Template {
 	templateList := []string{
-		"500.tmpl", "builtin.tmpl","entry.tmpl", "logingoauth2.tmpl",
+		"500.tmpl", "builtin.tmpl", "entry.tmpl", "logingoauth2.tmpl",
 		"search.tmpl", "entries.tmpl", "files.tmpl", "menu.tmpl",
 	}
 
@@ -48,23 +48,23 @@ func generateTemplate() *template.Template {
 	return tmpl
 }
 
-// InitWeb Initializes the web
-func InitWeb() {
+// Initialize Initializes the web
+func Initialize() {
 
-	server.Srv.Engine.SetHTMLTemplate(generateTemplate())
+	instance.Srv.Engine.SetHTMLTemplate(generateTemplate())
 
 	tbox, err := rice.FindBox("httpstatic")
 
 	if err == nil {
-		server.Srv.Engine.StaticFS("/static", tbox.HTTPBox())
+		instance.Srv.Engine.StaticFS("/static", tbox.HTTPBox())
 	} else {
-		server.Srv.Engine.StaticFS("/static", http.Dir("web/httpstatic"))
+		instance.Srv.Engine.StaticFS("/static", http.Dir("web/httpstatic"))
 	}
 
-	server.Srv.Engine.GET("/", doGETLogin)
-	server.Srv.Engine.GET("/login", doGETLogin)
+	instance.Srv.Engine.GET("/", doGETLogin)
+	instance.Srv.Engine.GET("/login", doGETLogin)
 
-	authorized := server.Srv.Engine.Group("/")
+	authorized := instance.Srv.Engine.Group("/")
 	authorized.Use(checkAuthorization())
 
 	authorized.GET("/w/:ws", doGETEntries)
@@ -78,26 +78,32 @@ func InitWeb() {
 	authorized.POST("/w/:ws/e/:id/f", doPOSTUpload)
 	authorized.GET("/w/:ws/e/:id/f/:name", doGETFile)
 
-
-    authorized.GET("/builtin/:id", doGETBuiltin)
+	authorized.GET("/builtin/:id", doGETBuiltin)
 	authorized.POST("/logingoauth2", doPOSTGoogleOauth2Login)
 	authorized.POST("/render", doPOSTRender)
 	authorized.GET("/cache/:hash", doGETCache)
 }
 
+func normalize(ID string) string {
+
+	// TODO
+
+	return ID
+}
+
 func doGETFile(c *gin.Context) {
 
-	ID := store.Normalize(c.Param("id"))
-	ws := store.Normalize(c.Param("ws"))
-	name := store.Normalize(c.Param("name"))
+	ID := normalize(c.Param("id"))
+	ws := normalize(c.Param("ws"))
+	name := normalize(c.Param("name"))
 
-	file := server.Srv.Store.Entry.FilePath(ws, ID, name)
+	file := instance.Srv.Store.Entry.FilePath(ws, ID, name)
 	c.File(file)
 }
 
 func doGETCache(c *gin.Context) {
 
-	hash := store.Normalize(c.Param("hash"))
+	hash := normalize(c.Param("hash"))
 
 	file := store.GetCachePath(hash)
 	c.File(file)

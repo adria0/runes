@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/adriamb/gopad/server"
+	"github.com/adriamb/gopad/server/instance"
 	"github.com/gin-gonic/gin"
 )
 
@@ -52,7 +52,7 @@ func (a *Auth) AuthorizeGoogleOauth2(c *gin.Context, oauthToken string) error {
 	}
 
 	var found *string
-	for _, allowed := range server.Srv.Config.Auth.AllowedEmails {
+	for _, allowed := range instance.Srv.Config.Auth.AllowedEmails {
 		if email == allowed {
 			found = &allowed
 			break

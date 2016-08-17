@@ -5,9 +5,8 @@ package web
 import (
 	"net/http"
 
-	"github.com/adriamb/gopad/model"
-	"github.com/adriamb/gopad/server"
-	"github.com/adriamb/gopad/store"
+	"github.com/adriamb/gopad/server/instance"
+	"github.com/adriamb/gopad/store/model"
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,21 +16,21 @@ type tmplEntry struct {
 
 func doPOSTSearch(c *gin.Context) {
 
-	ws := store.Normalize(c.Param("ws"))
+	ws := normalize(c.Param("ws"))
 	query := c.Request.FormValue("query")
 
-	results, err := server.Srv.Store.Entry.SearchEntries(ws, query)
+	results, err := instance.Srv.Store.Entry.SearchEntries(ws, query)
 	if err != nil {
 		c.HTML(http.StatusOK, "search.tmpl", gin.H{
-			"ws":     ws,
-			"error":  err,
+			"ws":    ws,
+			"error": err,
 		})
 		return
 	}
 	if len(results) == 0 {
 		c.HTML(http.StatusOK, "search.tmpl", gin.H{
-			"ws":     ws,
-			"info":   "No results",
+			"ws":   ws,
+			"info": "No results",
 		})
 		return
 	}
@@ -46,14 +45,14 @@ func doGETEntries(c *gin.Context) {
 	var entries []*model.Entry
 	var err error
 
-	ws := store.Normalize(c.Param("ws"))
-	id := store.Normalize(c.Param("id"))
+	ws := normalize(c.Param("ws"))
+	id := normalize(c.Param("id"))
 
 	if id != "" {
 
 		var entry *model.Entry
 
-		entry, err = server.Srv.Store.Entry.GetEntry(ws, id, "")
+		entry, err = instance.Srv.Store.Entry.GetEntry(ws, id, "")
 
 		if err == nil {
 			entries = append(entries, entry)
@@ -61,7 +60,7 @@ func doGETEntries(c *gin.Context) {
 
 	} else {
 
-		entries, err = server.Srv.Store.Entry.ListEntries(ws)
+		entries, err = instance.Srv.Store.Entry.ListEntries(ws)
 
 	}
 
@@ -85,16 +84,16 @@ func doGETEntries(c *gin.Context) {
 
 func doGETFiles(c *gin.Context) {
 
-	ws := store.Normalize(c.Param("ws"))
+	ws := normalize(c.Param("ws"))
 
-	files, err := server.Srv.Store.Entry.ListFiles(ws)
+	files, err := instance.Srv.Store.Entry.ListFiles(ws)
 	if err != nil {
 		dumpError(c, err)
 		return
 	}
 
 	c.HTML(http.StatusOK, "files.tmpl", gin.H{
-		"ws":     ws,
-		"files":  files,
+		"ws":    ws,
+		"files": files,
 	})
 }

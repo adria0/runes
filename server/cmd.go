@@ -1,4 +1,4 @@
-package cmd
+package server
 
 import (
 	"encoding/json"
@@ -7,9 +7,7 @@ import (
 	"os"
 	"os/user"
 
-	"github.com/adriamb/gopad/server"
 	"github.com/adriamb/gopad/server/config"
-	"github.com/adriamb/gopad/web"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -25,15 +23,13 @@ var RootCmd = &cobra.Command{
 	Short: "Minimal go notepad",
 	Long:  `A minimal markdown personal notepad written in go`,
 	Run: func(cmd *cobra.Command, args []string) {
-		server.Initialize(C)
-		web.InitWeb()
-		server.Start()
+		startServer(C)
 	},
 }
 
-// Execute adds all child commands to the root command sets flags appropriately.
+// ExecuteCmd adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
+func ExecuteCmd() {
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
