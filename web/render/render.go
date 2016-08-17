@@ -43,7 +43,6 @@ const (
 var (
 	renderHandlers = map[string]renderHandler{
 		"dot":      {filenameDot, renderDot},
-		"umletseq": {filenameUmlet, renderUmlet},
 	}
 )
 
