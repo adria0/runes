@@ -14,21 +14,31 @@
 </head>
 <body>
 
-{{template "menu.tmpl" .}}
+<nav class="navbar navbar-default navbar-fixed-top">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">GoPad</a>
+    </div>
+
+   </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
 
 <div class="container">
- {{ range $entry := .entries }}
+
     <div class="row">
       <div class="col-lg-2 col-md-1 col-sm-1"></div>
       <div class="col-lg-8 col-md-10 col-sm-10" id="text">
-          {{ $entry.Markdown | markdown }}
-          <a href="/w/{{ $.ws }}/e/{{ $entry.ID }}" class="btn btn-default pull-right btn-sm">View</a>
-          <a href="/w/{{ $.ws }}/e/{{ $entry.ID }}/edit" class="btn btn-default pull-right btn-sm btn-space">Edit</a>
-        </div>
+          {{ .content | markdown }}
       </div>
-      <div class="col-lg-2 col-md-1 col-sm-1"></div>
-    <hr />
-  {{ end }}
+    </div> <!-- row -->
 
 {{ if .error }} 
   <div class="row">
@@ -39,8 +49,10 @@
         <h2>{{ .error }}</h2>
       </div>
     </div>
-  </div>
+  </div> <!-- row -->
 {{ end }}
+
+</div> <!-- container -->
 
 <script>
 

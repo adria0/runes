@@ -24,7 +24,6 @@ func doPOSTSearch(c *gin.Context) {
 	if err != nil {
 		c.HTML(http.StatusOK, "search.tmpl", gin.H{
 			"ws":     ws,
-			"prefix": server.Srv.Config.Prefix,
 			"error":  err,
 		})
 		return
@@ -32,14 +31,12 @@ func doPOSTSearch(c *gin.Context) {
 	if len(results) == 0 {
 		c.HTML(http.StatusOK, "search.tmpl", gin.H{
 			"ws":     ws,
-			"prefix": server.Srv.Config.Prefix,
 			"info":   "No results",
 		})
 		return
 	}
 	c.HTML(http.StatusOK, "search.tmpl", gin.H{
 		"ws":      ws,
-		"prefix":  server.Srv.Config.Prefix,
 		"results": results,
 	})
 }
@@ -80,7 +77,6 @@ func doGETEntries(c *gin.Context) {
 
 	err = nil
 	c.HTML(http.StatusOK, "entries.tmpl", gin.H{
-		"prefix":  server.Srv.Config.Prefix,
 		"entries": htmlEntries,
 		"ws":      ws,
 		"error":   err,
@@ -99,7 +95,6 @@ func doGETFiles(c *gin.Context) {
 
 	c.HTML(http.StatusOK, "files.tmpl", gin.H{
 		"ws":     ws,
-		"prefix": server.Srv.Config.Prefix,
 		"files":  files,
 	})
 }

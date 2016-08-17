@@ -108,7 +108,7 @@ func (es *EntryStore) StoreEntry(entry *model.Entry) error {
 	return nil
 }
 
-// Get retrieves the specified entry
+// GetEntry retrieves the specified entry
 func (es *EntryStore) GetEntry(workspace, ID, version string ) (*model.Entry, error) {
 
 	mdPath := es.getMarkdownPath(workspace,ID,version)
@@ -126,6 +126,34 @@ func (es *EntryStore) GetEntry(workspace, ID, version string ) (*model.Entry, er
 
 	return entry, nil
 }
+
+// MustDeleteEntry removes the specified entry
+func (es *EntryStore) DeleteEntry(workspace, ID string) error {
+
+    mdPath := es.path + "/" + workspace + "/" + ID + ".md"
+    folderPath := es.path + "/" + workspace + "/" + ID
+    removedMdPath := es.path + "/" + workspace + "/_" + ID + ".md"
+    removedFolderPath := es.path + "/" + workspace + "/_" + ID
+
+    err := os.Rename(
+        mdPath,
+        removedMdPath,
+    )
+
+    if err != nil {
+        return err
+    }
+
+    err = os.Rename(
+        folderPath,
+        removedFolderPath,
+    )
+
+    return err
+}
+
+
+
 
 // GetVersions retrieves the versions of an entry
 func (es *EntryStore) GetEntryVersions(workspace, ID string) ([]string, error) {
@@ -170,9 +198,10 @@ func (es *EntryStore) ListEntries(workspace string) ([]*model.Entry, error) {
 
 	for _, fileInfo := range fileInfos {
 
-        if !fileInfo.IsDir() && strings.HasSuffix(fileInfo.Name(), ".md") {
+        name := fileInfo.Name()
 
-            name := fileInfo.Name()
+        if !fileInfo.IsDir() && strings.HasSuffix(name, ".md") &&
+           !strings.HasPrefix(name,"_") {
 
             entry, err := es.GetEntry(workspace,name[:len(name)-3], "")
 			if err != nil {
@@ -237,9 +266,9 @@ func (es *EntryStore) SearchEntries(workspace,expr string) ([]SearchResult, erro
 
 	for _, fileInfo := range fileInfos {
 
-		if !fileInfo.IsDir() {
+		name := fileInfo.Name()
 
-			name := fileInfo.Name()
+		if !fileInfo.IsDir() && !strings.HasPrefix(name , "_" ){
 
 			entry, err := es.GetEntry(workspace,name[:len(name)-3], "")
 			if err != nil {

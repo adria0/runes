@@ -4,10 +4,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="{{ .prefix  }}/static/css/bootstrap.min.css">
-  <link rel="stylesheet" href="{{ .prefix  }}/static/css/style.css">
-  <script src="{{ .prefix }}/static/js/jquery.min.js"></script>
-  <script src="{{ .prefix }}/static/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="/static/js/jquery.min.js"></script>
+  <script src="/static/js/bootstrap.min.js"></script>
 </head>
 <body>
 
@@ -20,7 +20,7 @@
  
 <h1>Workspace files</h1>
 {{ range $file := .files }}
-         <a href="{{ $.prefix  }}/w/{{ $file.Workspace }}/e/{{ $file.ID }}/f/{{ $file.Filename }}">{{ $file.Filename }}</a>
+         <a href="/w/{{ $file.Workspace }}/e/{{ $file.ID }}/f/{{ $file.Filename }}">{{ $file.Filename }}</a>
          <hr />
 {{ end }}
 

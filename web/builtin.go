@@ -2,18 +2,17 @@ package web
 
 import (
 	"io/ioutil"
+	"github.com/gin-gonic/gin"
+	"net/http"
 
 	"github.com/GeertJohan/go.rice"
-	"github.com/adriamb/gopad/model"
+	"github.com/adriamb/gopad/store"
 )
 
-func isBuiltinWorkspace(ws string) bool {
 
-    return ws == "builtin"
+func doGETBuiltin(c *gin.Context) {
 
-}
-
-func getBuiltinMdEntry(id string) (entry *model.Entry, err error) {
+	id := store.Normalize(c.Param("id"))
 
 	var content string
 
@@ -22,18 +21,20 @@ func getBuiltinMdEntry(id string) (entry *model.Entry, err error) {
 		content = tbox.MustString(id + ".md")
 	} else {
 		bytes, err := ioutil.ReadFile("web/builtin/" + id + ".md")
-		if err != nil {
-			return nil, err
+		if err == nil {
+		    content = string(bytes)
 		}
-		content = string(bytes)
 	}
 
-	entry = &model.Entry{
-		ID:        id,
-		Markdown:  content,
-		Workspace: "mdstatic",
+	if err != nil {
+		dumpError(c, err)
+		return
 	}
 
-	return entry, err
-
+	err = nil
+	c.HTML(http.StatusOK, "builtin.tmpl", gin.H{
+		"content": content,
+		"error":   err,
+	})
 }
+

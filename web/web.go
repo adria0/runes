@@ -23,7 +23,7 @@ var markdownRender = template.FuncMap{
 
 func generateTemplate() *template.Template {
 	templateList := []string{
-		"500.tmpl", "entry.tmpl", "logingoauth2.tmpl",
+		"500.tmpl", "builtin.tmpl","entry.tmpl", "logingoauth2.tmpl",
 		"search.tmpl", "entries.tmpl", "files.tmpl", "menu.tmpl",
 	}
 
@@ -72,11 +72,14 @@ func InitWeb() {
 	authorized.POST("/w/:ws/search", doPOSTSearch)
 
 	authorized.GET("/w/:ws/e/:id", doGETEntries)
-	authorized.GET("/w/:ws/e/:id/edit", doGETEntry)
+	authorized.GET("/w/:ws/e/:id/edit", doGETEntryEdit)
+	authorized.POST("/w/:ws/e/:id/delete", doPOSTEntryDelete)
 	authorized.POST("/w/:ws/e/:id", doPOSTEntry)
 	authorized.POST("/w/:ws/e/:id/f", doPOSTUpload)
 	authorized.GET("/w/:ws/e/:id/f/:name", doGETFile)
 
+
+    authorized.GET("/builtin/:id", doGETBuiltin)
 	authorized.POST("/logingoauth2", doPOSTGoogleOauth2Login)
 	authorized.POST("/render", doPOSTRender)
 	authorized.GET("/cache/:hash", doGETCache)
@@ -106,7 +109,6 @@ func buttonPressed(c *gin.Context, name string) bool {
 
 func dumpError(c *gin.Context, err error) {
 	c.HTML(http.StatusOK, "500.tmpl", gin.H{
-		"prefix":  server.Srv.Config.Prefix,
 		"message": err.Error(),
 	})
 }

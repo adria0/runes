@@ -17,7 +17,7 @@ var aa = auth.New()
 func checkAuthorization() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !aa.IsAuthorized(c) {
-			c.Redirect(http.StatusSeeOther, server.Srv.Config.Prefix+"/login")
+			c.Redirect(http.StatusSeeOther, "/login")
 			return
 		}
 	}
@@ -27,7 +27,7 @@ func doGETLogin(c *gin.Context) {
 
 	if server.Srv.Config.Auth.Type == config.AuthNone {
 		aa.Authorize(c)
-		c.Redirect(http.StatusSeeOther, server.Srv.Config.Prefix+"/w/default")
+		c.Redirect(http.StatusSeeOther, "/w/default")
 		return
 	}
 
@@ -36,7 +36,6 @@ func doGETLogin(c *gin.Context) {
 		var err error
 
 		c.HTML(http.StatusOK, "logingoauth2.tmpl", gin.H{
-			"prefix":         server.Srv.Config.Prefix,
 			"googleclientid": server.Srv.Config.Auth.GoogleClientID,
 			"error":          err,
 		})
@@ -56,10 +55,9 @@ func doPOSTGoogleOauth2Login(c *gin.Context) {
 	err := aa.AuthorizeGoogleOauth2(c, oauthtoken)
 	if err != nil {
 		c.HTML(http.StatusOK, "logingoauth2.tmpl", gin.H{
-			"prefix": server.Srv.Config.Prefix,
 			"error":  err,
 		})
 	} else {
-		c.Redirect(http.StatusSeeOther, server.Srv.Config.Prefix+"/entries")
+		c.Redirect(http.StatusSeeOther, "/w/default")
 	}
 }

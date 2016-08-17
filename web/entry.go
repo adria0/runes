@@ -34,10 +34,6 @@ func doPOSTUpload(c *gin.Context) {
 	ws := store.Normalize(c.Param("ws"))
 	id := store.Normalize(c.Param("id"))
 
-	if isBuiltinWorkspace(ws) {
-		return
-	}
-
 	file, fileHeader, err := c.Request.FormFile("file")
 
 	if err != nil {
@@ -52,7 +48,7 @@ func doPOSTUpload(c *gin.Context) {
 		return
 	}
 
-	path := server.Srv.Config.Prefix + "/w/" + ws + "/e/" + id + "/f/" + filename
+	path :=  "/w/" + ws + "/e/" + id + "/f/" + filename
 	split := strings.Split(filename, ".")
 	ext := split[len(split)-1]
 	ico := ""
@@ -76,7 +72,7 @@ func doPOSTRender(c *gin.Context) {
 	}
 }
 
-func doGETEntry(c *gin.Context) {
+func doGETEntryEdit(c *gin.Context) {
 
 	ws := store.Normalize(c.Param("ws"))
 	id := store.Normalize(c.Param("id"))
@@ -86,12 +82,7 @@ func doGETEntry(c *gin.Context) {
 	var editable = true
 	versions := []Version{}
 
-	if isBuiltinWorkspace(ws) {
-
-        entry, err = getBuiltinMdEntry(id)
-		editable = false
-
-	} else if id != "new" {
+	if id != "new" {
 
 		if strings.Contains(id, ".") {
 
@@ -148,7 +139,6 @@ func doGETEntry(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "entry.tmpl", gin.H{
-		"prefix":   server.Srv.Config.Prefix,
 		"ws":       ws,
 		"entry":    entry,
 		"editable": editable,
@@ -157,14 +147,25 @@ func doGETEntry(c *gin.Context) {
 
 }
 
-func doPOSTEntry(c *gin.Context) {
+func doPOSTEntryDelete(c *gin.Context) {
 
 	ws := store.Normalize(c.Param("ws"))
 	id := store.Normalize(c.Param("id"))
 
-	if isBuiltinWorkspace(ws) {
-		return
-	}
+    err := server.Srv.Store.Entry.DeleteEntry(ws, id)
+
+    if err != nil {
+        dumpError(c,err)
+    }
+
+	c.Redirect(http.StatusSeeOther, "/w/"+ws)
+
+}
+
+func doPOSTEntry(c *gin.Context) {
+
+	ws := store.Normalize(c.Param("ws"))
+	id := store.Normalize(c.Param("id"))
 
 	entry := model.Entry{
 		Workspace: ws,
@@ -177,7 +178,7 @@ func doPOSTEntry(c *gin.Context) {
 		dumpError(c, err)
 		return
 	}
-	c.Redirect(http.StatusSeeOther, server.Srv.Config.Prefix+"/w/"+ws)
+	c.Redirect(http.StatusSeeOther, "/w/"+ws)
 	return
 
 }

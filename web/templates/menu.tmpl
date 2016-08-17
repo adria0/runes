@@ -14,12 +14,12 @@
     <!-- Collect the nav links, forms, and other content for toggling -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav">
-        <li class="active"><a href="{{ .prefix  }}/w/{{ .ws }}"/>List<span class="sr-only">(current)</span></a></li>
-        <li><a href="{{ .prefix }}/w/{{ .ws }}/e/new/edit">New</a></li>
-        <li><a href="{{ .prefix }}/w/{{ .ws }}/f">Files</a></li>
-        <li><a href="{{ .prefix }}/w/builtin/e/help/edit">Help</a></li>
+        <li class="active"><a href="/w/{{ .ws }}"/>List<span class="sr-only">(current)</span></a></li>
+        <li><a href="/w/{{ .ws }}/e/new/edit">New</a></li>
+        <li><a href="/w/{{ .ws }}/f">Files</a></li>
+        <li><a href="/builtin/help">Help</a></li>
      </ul>
-      <form method="POST" action="{{ .prefix }}/w/{{ .ws }}/search" class="navbar-form navbar-left" role="search">
+      <form method="POST" action="/w/{{ .ws }}/search" class="navbar-form navbar-left" role="search">
         <div class="form-group">
           <input type="text" name="query" class="form-control" placeholder="Search">
         </div>
