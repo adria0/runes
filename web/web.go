@@ -84,11 +84,23 @@ func Initialize() {
 	authorized.GET("/cache/:hash", doGETCache)
 }
 
-func normalize(ID string) string {
+func normalize(s string) string {
 
-	// TODO
+	rs := []rune(s)
+	for i := 0; i < len(rs); i++ {
+		rv := int(rs[i])
+		if (rv >= int('A') && rv <= int('Z')) ||
+			(rv >= int('a') && rv <= int('z')) ||
+			(rv >= int('0') && rv <= int('9')) {
 
-	return ID
+		} else {
+			rs[i] = '_'
+
+		}
+
+	}
+	return string(rs)
+
 }
 
 func doGETFile(c *gin.Context) {
