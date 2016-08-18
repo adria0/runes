@@ -5,8 +5,8 @@ package web
 import (
 	"net/http"
 
-	"github.com/adriamb/gopad/model"
-	"github.com/adriamb/gopad/server"
+	"github.com/adriamb/gopad/server/instance"
+	"github.com/adriamb/gopad/store/model"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,24 +16,26 @@ type tmplEntry struct {
 
 func doPOSTSearch(c *gin.Context) {
 
+	ws := normalize(c.Param("ws"))
 	query := c.Request.FormValue("query")
-	results, err := server.Srv.Store.Entry.Search(query)
+
+	results, err := instance.Srv.Store.Entry.SearchEntries(ws, query)
 	if err != nil {
 		c.HTML(http.StatusOK, "search.tmpl", gin.H{
-			"prefix": server.Srv.Config.Prefix,
-			"error":  err,
+			"ws":    ws,
+			"error": err,
 		})
 		return
 	}
 	if len(results) == 0 {
 		c.HTML(http.StatusOK, "search.tmpl", gin.H{
-			"prefix": server.Srv.Config.Prefix,
-			"info":   "No results",
+			"ws":   ws,
+			"info": "No results",
 		})
 		return
 	}
 	c.HTML(http.StatusOK, "search.tmpl", gin.H{
-		"prefix":  server.Srv.Config.Prefix,
+		"ws":      ws,
 		"results": results,
 	})
 }
@@ -43,16 +45,14 @@ func doGETEntries(c *gin.Context) {
 	var entries []*model.Entry
 	var err error
 
-	id := c.Param("id")
+	ws := normalize(c.Param("ws"))
+	id := normalize(c.Param("id"))
 
 	if id != "" {
 
 		var entry *model.Entry
-		if existsStaticMd(id) {
-			entry, err = getStaticMdEntry(id)
-		} else {
-			entry, err = server.Srv.Store.Entry.Get(id)
-		}
+
+		entry, err = instance.Srv.Store.Entry.GetEntry(ws, id, "")
 
 		if err == nil {
 			entries = append(entries, entry)
@@ -60,7 +60,7 @@ func doGETEntries(c *gin.Context) {
 
 	} else {
 
-		entries, err = server.Srv.Store.Entry.List()
+		entries, err = instance.Srv.Store.Entry.ListEntries(ws)
 
 	}
 
@@ -76,22 +76,24 @@ func doGETEntries(c *gin.Context) {
 
 	err = nil
 	c.HTML(http.StatusOK, "entries.tmpl", gin.H{
-		"prefix":  server.Srv.Config.Prefix,
 		"entries": htmlEntries,
+		"ws":      ws,
 		"error":   err,
 	})
 }
 
 func doGETFiles(c *gin.Context) {
 
-	files, err := server.Srv.Store.File.List()
+	ws := normalize(c.Param("ws"))
+
+	files, err := instance.Srv.Store.Entry.ListFiles(ws)
 	if err != nil {
 		dumpError(c, err)
 		return
 	}
 
 	c.HTML(http.StatusOK, "files.tmpl", gin.H{
-		"prefix": server.Srv.Config.Prefix,
-		"files":  files,
+		"ws":    ws,
+		"files": files,
 	})
 }

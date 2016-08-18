@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/GeertJohan/go.rice"
-	"github.com/adriamb/gopad/server"
+	"github.com/adriamb/gopad/server/instance"
 	"github.com/adriamb/gopad/store"
 	"github.com/adriamb/gopad/web/render"
 	"github.com/gin-gonic/gin"
@@ -23,7 +23,7 @@ var markdownRender = template.FuncMap{
 
 func generateTemplate() *template.Template {
 	templateList := []string{
-		"500.tmpl", "entry.tmpl", "logingoauth2.tmpl",
+		"500.tmpl", "builtin.tmpl", "entry.tmpl", "logingoauth2.tmpl",
 		"search.tmpl", "entries.tmpl", "files.tmpl", "menu.tmpl",
 	}
 
@@ -48,45 +48,76 @@ func generateTemplate() *template.Template {
 	return tmpl
 }
 
-// InitWeb Initializes the web
-func InitWeb() {
+// Initialize Initializes the web
+func Initialize() {
 
-	server.Srv.Engine.SetHTMLTemplate(generateTemplate())
+	instance.Srv.Engine.SetHTMLTemplate(generateTemplate())
 
 	tbox, err := rice.FindBox("httpstatic")
 
 	if err == nil {
-		server.Srv.Engine.StaticFS("/static", tbox.HTTPBox())
+		instance.Srv.Engine.StaticFS("/static", tbox.HTTPBox())
 	} else {
-		server.Srv.Engine.StaticFS("/static", http.Dir("web/httpstatic"))
+		instance.Srv.Engine.StaticFS("/static", http.Dir("web/httpstatic"))
 	}
 
-	server.Srv.Engine.GET("/login", doGETLogin)
+	instance.Srv.Engine.GET("/", doGETLogin)
+	instance.Srv.Engine.GET("/login", doGETLogin)
 
-	authorized := server.Srv.Engine.Group("/")
+	authorized := instance.Srv.Engine.Group("/")
 	authorized.Use(checkAuthorization())
 
-	authorized.GET("/", doGETEntries)
+	authorized.GET("/w/:ws", doGETEntries)
+	authorized.GET("/w/:ws/f", doGETFiles)
+	authorized.POST("/w/:ws/search", doPOSTSearch)
+
+	authorized.GET("/w/:ws/e/:id", doGETEntries)
+	authorized.GET("/w/:ws/e/:id/edit", doGETEntryEdit)
+	authorized.POST("/w/:ws/e/:id/delete", doPOSTEntryDelete)
+	authorized.POST("/w/:ws/e/:id", doPOSTEntry)
+	authorized.POST("/w/:ws/e/:id/f", doPOSTUpload)
+	authorized.GET("/w/:ws/e/:id/f/:name", doGETFile)
+
+	authorized.GET("/builtin/:id", doGETBuiltin)
 	authorized.POST("/logingoauth2", doPOSTGoogleOauth2Login)
-	authorized.GET("/entries", doGETEntries)
-	authorized.GET("/entries/:id", doGETEntries)
-	authorized.GET("/entries/:id/edit", doGETEntry)
-	authorized.POST("/entries/:id/edit", doPOSTEntry)
-	authorized.POST("/markdown", doPOSTMarkdown)
-	authorized.POST("/entries/:id/edit/files", doPOSTUpload)
-	authorized.GET("/files/:id", doGETFile)
-	authorized.GET("/files", doGETFiles)
-	authorized.GET("/cache/:id", doGETCache)
-	authorized.POST("/search", doPOSTSearch)
+	authorized.POST("/render", doPOSTRender)
+	authorized.GET("/cache/:hash", doGETCache)
+}
+
+func normalize(s string) string {
+
+	rs := []rune(s)
+	for i := 0; i < len(rs); i++ {
+		rv := int(rs[i])
+		if (rv >= int('A') && rv <= int('Z')) ||
+			(rv >= int('a') && rv <= int('z')) ||
+			(rv >= int('0') && rv <= int('9')) {
+
+		} else {
+			rs[i] = '_'
+
+		}
+
+	}
+	return string(rs)
+
 }
 
 func doGETFile(c *gin.Context) {
-	file := server.Srv.Store.File.Fullpath(c.Param("id"))
+
+	ID := normalize(c.Param("id"))
+	ws := normalize(c.Param("ws"))
+	name := normalize(c.Param("name"))
+
+	file := instance.Srv.Store.Entry.FilePath(ws, ID, name)
 	c.File(file)
 }
 
 func doGETCache(c *gin.Context) {
-	file := store.GetCachePath(c.Param("id"))
+
+	hash := normalize(c.Param("hash"))
+
+	file := store.GetCachePath(hash)
 	c.File(file)
 }
 
@@ -96,7 +127,6 @@ func buttonPressed(c *gin.Context, name string) bool {
 
 func dumpError(c *gin.Context, err error) {
 	c.HTML(http.StatusOK, "500.tmpl", gin.H{
-		"prefix":  server.Srv.Config.Prefix,
 		"message": err.Error(),
 	})
 }

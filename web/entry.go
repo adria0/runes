@@ -3,9 +3,9 @@
 package web
 
 import (
-	"github.com/adriamb/gopad/model"
-	"github.com/adriamb/gopad/server"
+	"github.com/adriamb/gopad/server/instance"
 	"github.com/adriamb/gopad/store"
+	"github.com/adriamb/gopad/store/model"
 	"github.com/adriamb/gopad/web/render"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -31,11 +31,8 @@ type Version struct {
 
 func doPOSTUpload(c *gin.Context) {
 
-	id := c.Param("id")
-
-	if existsStaticMd(id) {
-		return
-	}
+	ws := normalize(c.Param("ws"))
+	id := normalize(c.Param("id"))
 
 	file, fileHeader, err := c.Request.FormFile("file")
 
@@ -44,13 +41,14 @@ func doPOSTUpload(c *gin.Context) {
 		return
 	}
 
-	filename, err := server.Srv.Store.File.Write(fileHeader.Filename, id, file)
+	filename := normalize(fileHeader.Filename)
+	err = instance.Srv.Store.Entry.StoreFile(ws, id, filename, file)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	path := server.Srv.Config.Prefix + "/files/" + filename
+	path := "/w/" + ws + "/e/" + id + "/f/" + filename
 	split := strings.Split(filename, ".")
 	ext := split[len(split)-1]
 	ico := ""
@@ -66,7 +64,7 @@ func doPOSTUpload(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"name": fileHeader.Filename, "path": path, "ico": ico})
 }
 
-func doPOSTMarkdown(c *gin.Context) {
+func doPOSTRender(c *gin.Context) {
 	var json dtoMarkdownRender
 	if c.BindJSON(&json) == nil {
 		html := string(render.Render(json.Markdown))
@@ -74,9 +72,10 @@ func doPOSTMarkdown(c *gin.Context) {
 	}
 }
 
-func doGETEntry(c *gin.Context) {
+func doGETEntryEdit(c *gin.Context) {
 
-	id := c.Param("id")
+	ws := normalize(c.Param("ws"))
+	id := normalize(c.Param("id"))
 
 	var entry *model.Entry
 	var err error
@@ -85,51 +84,43 @@ func doGETEntry(c *gin.Context) {
 
 	if id != "new" {
 
-		if existsStaticMd(id) {
+		if strings.Contains(id, ".") {
 
-			entry, err = getStaticMdEntry(id)
+			split := strings.SplitN(id, ".", 2)
+			id = split[0]
+			version := split[1]
+			entry, err = instance.Srv.Store.Entry.GetEntry(ws, id, version)
 			editable = false
 
 		} else {
 
-			if strings.Contains(id, ".") {
+			entry, err = instance.Srv.Store.Entry.GetEntry(ws, id, "")
 
-				split := strings.SplitN(id, ".", 2)
-				id = split[0]
-				version := split[1]
-				entry, err = server.Srv.Store.Entry.GetVersion(id, version)
-				editable = false
+		}
 
-			} else {
+		if err == nil {
 
-				entry, err = server.Srv.Store.Entry.Get(id)
+			versions = append(versions, Version{
+				Description: "Last",
+				URL:         "/w/" + ws + "/e/" + id + "/edit",
+			})
 
+			var versionids []string
+			versionids, err = instance.Srv.Store.Entry.GetEntryVersions(ws, id)
+			sort.Sort(sort.Reverse(sort.StringSlice(versionids)))
+
+			if len(versionids) > 15 {
+				versionids = versionids[:15]
 			}
 
-			if err == nil {
+			for _, versionid := range versionids {
+				t, timeerr := time.Parse(store.DateTimeFormat, versionid)
 
-				versions = append(versions, Version{
-					Description: "Last",
-					URL:         "/entries/" + id + "/edit",
-				})
-
-				var versionids []string
-				versionids, err = server.Srv.Store.Entry.GetVersions(id)
-				sort.Sort(sort.Reverse(sort.StringSlice(versionids)))
-
-				if len(versionids) > 15 {
-					versionids = versionids[:15]
-				}
-
-				for _, versionid := range versionids {
-					t, timeerr := time.Parse(store.DateTimeFormat, versionid)
-
-					if timeerr == nil {
-						versions = append(versions, Version{
-							Description: t.Format(versionDateTimeDisplay),
-							URL:         "/entries/" + id + "." + versionid + "/edit",
-						})
-					}
+				if timeerr == nil {
+					versions = append(versions, Version{
+						Description: t.Format(versionDateTimeDisplay),
+						URL:         "/w/" + ws + "/e/" + id + "." + versionid + "/edit",
+					})
 				}
 			}
 		}
@@ -142,13 +133,13 @@ func doGETEntry(c *gin.Context) {
 	} else {
 
 		entry = &model.Entry{
-			ID: server.Srv.Store.Entry.NewID(),
+			ID: instance.Srv.Store.Entry.NewID(),
 		}
 
 	}
 
 	c.HTML(http.StatusOK, "entry.tmpl", gin.H{
-		"prefix":   server.Srv.Config.Prefix,
+		"ws":       ws,
 		"entry":    entry,
 		"editable": editable,
 		"versions": versions,
@@ -156,26 +147,38 @@ func doGETEntry(c *gin.Context) {
 
 }
 
+func doPOSTEntryDelete(c *gin.Context) {
+
+	ws := normalize(c.Param("ws"))
+	id := normalize(c.Param("id"))
+
+	err := instance.Srv.Store.Entry.DeleteEntry(ws, id)
+
+	if err != nil {
+		dumpError(c, err)
+	}
+
+	c.Redirect(http.StatusSeeOther, "/w/"+ws)
+
+}
+
 func doPOSTEntry(c *gin.Context) {
 
-	id := c.Param("id")
-
-	if existsStaticMd(id) {
-		return
-	}
+	ws := normalize(c.Param("ws"))
+	id := normalize(c.Param("id"))
 
 	entry := model.Entry{
-		ID:       id,
-		Title:    c.DefaultPostForm("Title", "undefined"),
-		Markdown: c.DefaultPostForm("Markdown", "undefined"),
+		Workspace: ws,
+		ID:        id,
+		Markdown:  c.DefaultPostForm("Markdown", "undefined"),
 	}
 
-	err := server.Srv.Store.Entry.Store(&entry)
+	err := instance.Srv.Store.Entry.StoreEntry(&entry)
 	if err != nil {
 		dumpError(c, err)
 		return
 	}
-	c.Redirect(http.StatusSeeOther, server.Srv.Config.Prefix+"/entries")
+	c.Redirect(http.StatusSeeOther, "/w/"+ws)
 	return
 
 }

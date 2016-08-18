@@ -9,7 +9,7 @@ import (
 )
 
 func filenameDot(ID string) string {
-	return ID + ".svg"
+	return ID + ".png"
 }
 
 func renderDot(filename string, params string, data []byte) error {
@@ -32,7 +32,7 @@ func renderDot(filename string, params string, data []byte) error {
 	}
 	svgfile := store.GetCachePath(filename)
 
-	cmd := exec.Command("dot", dotfile, "-Tsvg", "-o"+svgfile)
+	cmd := exec.Command("dot", dotfile, "-Tpng", "-o"+svgfile)
 	var out bytes.Buffer
 	cmd.Stderr = &out
 
