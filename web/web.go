@@ -91,7 +91,8 @@ func normalize(s string) string {
 		rv := int(rs[i])
 		if (rv >= int('A') && rv <= int('Z')) ||
 			(rv >= int('a') && rv <= int('z')) ||
-			(rv >= int('0') && rv <= int('9')) {
+			(rv >= int('0') && rv <= int('9')) ||
+			(rv == int('.')) {
 
 		} else {
 			rs[i] = '_'
