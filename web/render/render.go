@@ -43,6 +43,7 @@ const (
 var (
 	renderHandlers = map[string]renderHandler{
 		"dot": {filenameDot, renderDot},
+		"goat": {filenameGoat, renderGoat},
 	}
 )
 
