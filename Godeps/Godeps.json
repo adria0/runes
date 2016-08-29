@@ -9,6 +9,10 @@
 			"Rev": "99064174e013895bbd9b025c31100bd1d9b590ca"
 		},
 		{
+			"ImportPath": "github.com/CrowdSurge/banner",
+			"Rev": "8c0e79dc5ff70fb2919f0d662f44fd72ccdf9be2"
+		},
+		{
 			"ImportPath": "github.com/CrowdSurge/banner/fonts",
 			"Rev": "8c0e79dc5ff70fb2919f0d662f44fd72ccdf9be2"
 		},
@@ -21,8 +25,8 @@
 			"Rev": "0f3f5fde32fd1f755632a3d31ba2ec6d449e387b"
 		},
 		{
-			"ImportPath": "github.com/crowdsurge/banner",
-			"Rev": "8c0e79dc5ff70fb2919f0d662f44fd72ccdf9be2"
+			"ImportPath": "github.com/blampe/goat/src",
+			"Rev": "2184ebe13497ec587e6f48b9381883285fa0071c"
 		},
 		{
 			"ImportPath": "github.com/daaku/go.zipexe",
