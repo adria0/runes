@@ -6,9 +6,11 @@
 GoPad is a web application, with the following features:
 
 - **Markdown** support with github flavour
-- **Realtime render**: All data written in the markdown are automatically rendered
-- **Graphviz (dot)** support
-- **Goat support** (see https://github.com/blampe/goat)
+- **Realtime render**: All data written in the markdown are automatically rendered, with support for
+  - **Graphviz (see http://www.graphviz.org/)**
+  - **Goat  (see https://github.com/blampe/goat)
+  - Js Sequence diagrams (see https://bramp.github.io/js-sequence-diagrams/)
+  - Js Flowchart (see http://flowchart.js.org/)
 - **Attachments** support, just drag&drop
 - **No database** , all data are written into the filesystem with .md and .json files. If you want to backup the data, just copy the folder, or create a git repo for it.
 - **No data is overwritten**, attachments cannot be overwritten, page changes are versioned
@@ -56,28 +58,5 @@ filesystem and a link will be created inside the markdown text.
 
 You can access the file with the created link or using the Files menu item.
 
-## Support for graphviz
-
-Gopad uses graphviz using the external command `dot`, so it should be installed in your system.
-
-The syntax for dot is (note that the `digraph {}` element are automatically added)
-
-        ```dot
-        node1 -> node2
-        ```
-
-## Support for goat
-
-Gopad has support for goat ; using the syntax:
-
-        ```goat
-                  .        
-                 / \      
-                /   \     
-               +     +    
-              / \   / \   
-             /   \ /   \  
-             1   2 3   4  
-        ```
 
 
