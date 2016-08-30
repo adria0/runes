@@ -1,26 +1,33 @@
 package render
 
 import (
-	"bytes"
+	"strings"
 	"os"
 
-	"github.com/adriamb/gopad/store"
 	"github.com/blampe/goat/src"
 )
 
-func filenameGoat(ID string) string {
-	return ID + ".svg"
+type goatRenderer struct {
+
 }
 
-func renderGoat(filename string, params string, data []byte) error {
+func (g *goatRenderer) BlockDescriptor() string {
+    return "goat"
+}
 
-	svgfile := store.GetCachePath(filename)
-	file, err := os.Create(svgfile)
+func (g *goatRenderer) ImageFileExtension() string {
+	return ".svg"
+}
+
+func (g *goatRenderer) RenderToFile(data string, params string, filename string) error{
+
+	file, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	goat.ASCIItoSVG(bytes.NewReader(data), file)
+
+	goat.ASCIItoSVG(strings.NewReader(data), file)
 
 	return nil
 }

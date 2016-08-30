@@ -4,35 +4,43 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
-
 	"github.com/adriamb/gopad/store"
 )
 
-func filenameDot(ID string) string {
-	return ID + ".png"
+type dotRenderer struct {
+
 }
 
-func renderDot(filename string, params string, data []byte) error {
-	var dot bytes.Buffer
+
+func (d *dotRenderer) BlockDescriptor() string {
+    return "dot"
+}
+
+func (d *dotRenderer) ImageFileExtension() string {
+	return "png"
+}
+
+func (d *dotRenderer) RenderToFile(data string, params string, filename string) error {
+
+    var dot bytes.Buffer
 	var err error
 
 	if _, err = dot.WriteString("digraph G {\n"); err != nil {
 		return err
 	}
-	if _, err = dot.Write(data); err != nil {
+	if _, err = dot.WriteString(data); err != nil {
 		return err
 	}
 	if _, err = dot.WriteString("\n}"); err != nil {
 		return err
 	}
 
-	dotfile, err := store.WriteTemp(filename+".dot", dot.Bytes())
+	dotfile, err := store.WriteTemp(dot.Bytes())
 	if err != nil {
 		return fmt.Errorf("%v", err)
 	}
-	svgfile := store.GetCachePath(filename)
 
-	cmd := exec.Command("dot", dotfile, "-Tpng", "-o"+svgfile)
+	cmd := exec.Command("dot", dotfile, "-Tpng", "-o"+filename)
 	var out bytes.Buffer
 	cmd.Stderr = &out
 
@@ -40,4 +48,7 @@ func renderDot(filename string, params string, data []byte) error {
 		return fmt.Errorf("%v %v", err, out.String())
 	}
 	return nil
+
 }
+
+

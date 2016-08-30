@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/GeertJohan/go.rice"
+	"github.com/adriamb/gopad/web/render"
 )
 
 func doGETBuiltin(c *gin.Context) {
@@ -31,7 +32,8 @@ func doGETBuiltin(c *gin.Context) {
 
 	err = nil
 	c.HTML(http.StatusOK, "builtin.tmpl", gin.H{
-		"content": content,
+        "htmlHeaders" : render.HtmlHeaders(),
+        "content": content,
 		"error":   err,
 	})
 }

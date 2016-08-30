@@ -7,20 +7,14 @@ import (
 	"fmt"
 	"io"
 	"log"
+    "errors"
 	"strings"
 
 	"github.com/adriamb/gopad/store"
 	"github.com/russross/blackfriday"
 )
 
-type renderHandler struct {
-	filename func(string) string
-	render   func(string, string, []byte) error
-}
-
 const (
-	extPNG = ".png"
-
 	commonHTMLFlags = 0 |
 		blackfriday.HTML_USE_XHTML |
 		blackfriday.HTML_USE_SMARTYPANTS |
@@ -40,12 +34,43 @@ const (
 		blackfriday.EXTENSION_DEFINITION_LISTS
 )
 
+type renderer interface {
+    BlockDescriptor() string
+}
+
+type divRenderer interface {
+    BlockDescriptor() string
+    HtmlHeaders() string
+    RenderToBuffer(data string, params string) (string, error)
+}
+
+type imageRenderer interface {
+    BlockDescriptor() string
+    ImageFileExtension() string
+    RenderToFile(data string, params string, filename string) error
+}
+
 var (
-	renderHandlers = map[string]renderHandler{
-		"dot":  {filenameDot, renderDot},
-		"goat": {filenameGoat, renderGoat},
-	}
+	renderers  map[string]renderer
+    errNotImplemented = errors.New("Not implemented")
 )
+
+func init() {
+
+    rs := [...]renderer {
+        &dotRenderer{},
+        &goatRenderer{},
+        &jsseqRenderer{},
+        &jsflowRenderer{},
+    }
+
+    renderers = make(map[string]renderer)
+    for _,r := range rs {
+        renderers[r.BlockDescriptor()]=r
+    }
+
+}
+
 
 func mustWrite(w io.Writer, p []byte) {
 	_, err := w.Write(p)
@@ -61,10 +86,7 @@ func mustWriteString(w io.Writer, s string) {
 	}
 }
 
-func blockRenderer(content []byte, srange blackfriday.SourceRange, langAndParams string) ([]byte, error) {
-
-	var handler renderHandler
-	var exists bool
+func blockRenderer(content string, srange blackfriday.SourceRange, langAndParams string) (string, error) {
 
 	lap := strings.Split(langAndParams, ":")
 	language := lap[0]
@@ -74,27 +96,68 @@ func blockRenderer(content []byte, srange blackfriday.SourceRange, langAndParams
 		class = lap[1]
 	}
 
-	if handler, exists = renderHandlers[language]; !exists {
-		return nil, fmt.Errorf("Handle for language " + language + " does not exist")
+    var r renderer
+    var exists bool
+
+    if r, exists = renderers[language]; !exists {
+		return "", fmt.Errorf("Handle for language " + language + " does not exist")
 	}
 
-	hasher := sha1.New()
-	mustWrite(hasher, content)
-	sha1 := hasher.Sum(nil)
-	ID := hex.EncodeToString(sha1[:])
-	filename := handler.filename(ID)
+    if imgR, ok := r.(imageRenderer) ; ok {
 
-	if !store.ExistsCache(filename) {
-		if err := handler.render(filename, "", content); err != nil {
-			return nil, err
-		}
-	}
+        hasher := sha1.New()
+        mustWriteString(hasher, content)
+        sha1 := hasher.Sum(nil)
+        ID := hex.EncodeToString(sha1[:])
+        filename := ID + "."+ imgR.ImageFileExtension()
 
-	imgloc := fmt.Sprintf("<img src=/cache/%s class=\""+class+"\" %s><br>", filename, srange.Attrs())
-	imglocbytes := []byte(imgloc)
+        if !store.ExistsCache(filename) {
 
-	return imglocbytes, nil
+            filenameWithPath := store.GetCachePath(filename)
+
+            if err := imgR.RenderToFile(content, "", filenameWithPath); err != nil {
+                return "", err
+            }
+
+        }
+
+        imgloc := fmt.Sprintf("<img src=/cache/%s class=\""+class+"\" %s><br>", filename, srange.Attrs())
+
+        return imgloc,nil
+
+    } else {
+
+        divR := r.(divRenderer)
+
+        rendered, err := divR.RenderToBuffer(content,"")
+        if err != nil {
+            return "", err
+        }
+
+        div := fmt.Sprintf("<div class=\""+class+"\" %s>%s</div><br>", srange.Attrs(), string(rendered))
+
+        return div, nil
+
+    }
+
 }
+
+func HtmlHeaders() string {
+
+    var buffer bytes.Buffer
+
+    for _,r := range renderers {
+
+    if divR, ok := r.(divRenderer) ; ok {
+
+        buffer.WriteString(divR.HtmlHeaders())
+    }
+
+    }
+
+    return buffer.String()
+}
+
 
 // Render a markdown into html
 func Render(markdown string) []byte {
@@ -113,3 +176,4 @@ func Render(markdown string) []byte {
 	mustWriteString(&out, "</div>")
 	return out.Bytes()
 }
+
