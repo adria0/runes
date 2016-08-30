@@ -7,7 +7,7 @@ GoPad is a web application, with the following features:
 
 - **Markdown** support with github flavour
 - **Realtime render**: All data written in the markdown are automatically rendered, with support for
-  - **Graphviz** (see http://www.graphviz.org/)**
+  - **Graphviz** (see http://www.graphviz.org/)
   - **Goat**  (see https://github.com/blampe/goat)
   - **Js Sequence diagrams** (see https://bramp.github.io/js-sequence-diagrams/)
   - **Js Flowchart** (see http://flowchart.js.org/)
@@ -15,6 +15,24 @@ GoPad is a web application, with the following features:
 - **No database** , all data are written into the filesystem with .md and .json files. If you want to backup the data, just copy the folder, or create a git repo for it.
 - **No data is overwritten**, attachments cannot be overwritten, page changes are versioned
 - **Google OAuth2** support, if you want you can push your blog in a public space and log into with your google account.
+
+## Installation
+
+Install the gopad with
+
+`go get https://github.com/adriamb/gopad`
+
+create a minimal configuration file `$HOME/.gopad.yaml` with the following content:
+
+```yaml
+port: 8080
+```
+
+run the gopad 
+
+`gopad`
+
+go to a browser `http://localhost:8080`
 
 ## Fast test with docker
 
@@ -36,7 +54,7 @@ all files generated will be kept in the `docker/data`, take a look
 
 ## Configuration file
 
-Gopad uses the following configuration file, by default located in $HOME/.gopad but you can specify it with the `--config` command line parameter.
+Gopad uses the following configuration file, by default located in $HOME/.gopad.yaml but you can specify it with the `--config` command line parameter.
 
 ```yaml
 port: <server port, e.g. 8080>
