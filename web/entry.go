@@ -139,11 +139,11 @@ func doGETEntryEdit(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "entry.tmpl", gin.H{
-        "htmlHeaders": render.HtmlHeaders(),
-        "ws":       ws,
-		"entry":    entry,
-		"editable": editable,
-		"versions": versions,
+		"htmlHeaders": render.HTMLHeaders(),
+		"ws":          ws,
+		"entry":       entry,
+		"editable":    editable,
+		"versions":    versions,
 	})
 
 }

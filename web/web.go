@@ -28,8 +28,8 @@ func generateTemplate() *template.Template {
 	templateList := []string{
 		"500.tmpl", "builtin.tmpl", "entry.tmpl", "logingoauth2.tmpl",
 		"search.tmpl", "entries.tmpl", "files.tmpl", "menu.tmpl",
-	    "head.tmpl", "tail.tmpl",
-    }
+		"head.tmpl", "tail.tmpl",
+	}
 
 	tbox, tboxerr := rice.FindBox("templates")
 	tmpl := template.New("name").Funcs(markdownRender)

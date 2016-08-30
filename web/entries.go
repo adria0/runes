@@ -78,10 +78,10 @@ func doGETEntries(c *gin.Context) {
 
 	err = nil
 	c.HTML(http.StatusOK, "entries.tmpl", gin.H{
-        "htmlHeaders" : render.HtmlHeaders(),
-        "entries": htmlEntries,
-		"ws":      ws,
-		"error":   err,
+		"htmlHeaders": render.HTMLHeaders(),
+		"entries":     htmlEntries,
+		"ws":          ws,
+		"error":       err,
 	})
 }
 

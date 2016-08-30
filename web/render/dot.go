@@ -3,17 +3,15 @@ package render
 import (
 	"bytes"
 	"fmt"
-	"os/exec"
 	"github.com/adriamb/gopad/store"
+	"os/exec"
 )
 
 type dotRenderer struct {
-
 }
 
-
 func (d *dotRenderer) BlockDescriptor() string {
-    return "dot"
+	return "dot"
 }
 
 func (d *dotRenderer) ImageFileExtension() string {
@@ -22,7 +20,7 @@ func (d *dotRenderer) ImageFileExtension() string {
 
 func (d *dotRenderer) RenderToFile(data string, params string, filename string) error {
 
-    var dot bytes.Buffer
+	var dot bytes.Buffer
 	var err error
 
 	if _, err = dot.WriteString("digraph G {\n"); err != nil {
@@ -50,5 +48,3 @@ func (d *dotRenderer) RenderToFile(data string, params string, filename string) 
 	return nil
 
 }
-
-

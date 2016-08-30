@@ -32,8 +32,8 @@ func doGETBuiltin(c *gin.Context) {
 
 	err = nil
 	c.HTML(http.StatusOK, "builtin.tmpl", gin.H{
-        "htmlHeaders" : render.HtmlHeaders(),
-        "content": content,
-		"error":   err,
+		"htmlHeaders": render.HTMLHeaders(),
+		"content":     content,
+		"error":       err,
 	})
 }

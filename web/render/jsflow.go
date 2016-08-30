@@ -1,45 +1,53 @@
 package render
 
 import (
-    "time"
-    "fmt"
-    "strings"
+	"fmt"
+	"strings"
+	"time"
 )
 
-type jsflowRenderer struct {
+var jsflowParams = map[string]string{
+	"scale": "1",
+}
 
+type jsflowRenderer struct {
 }
 
 func (j *jsflowRenderer) BlockDescriptor() string {
 
-    return "jsflow"
+	return "jsflow"
 
 }
 
-func (j *jsflowRenderer) HtmlHeaders() string {
+func (j *jsflowRenderer) HTMLHeaders() string {
 
-    return `
-    <script src="http://github.com/DmitryBaranovskiy/raphael/raw/master/raphael-min.js"></script>
+	return `
     <script src="http://flowchart.js.org/flowchart-latest.js"></script>
     `
 }
 
 func (j *jsflowRenderer) RenderToBuffer(data string, params string) (string, error) {
 
-    data = strings.Replace(data,"\n","\\n",-1)
+	p := params2map(params, jsflowParams)
 
-    divId := fmt.Sprintf("div%v",time.Now().UnixNano())
+	data = strings.Replace(data, "\n", "\\n", -1)
 
-    div := `
-    <div id="`+divId+`"></div>
+	divID := fmt.Sprintf("div%v", time.Now().UnixNano())
+
+	div := `
+    <div id="` + divID + `"></div>
     <script>
-        var diagram = flowchart.parse("`+data+`");
-        diagram.drawSVG('`+divId+`');
-    </script>
+        var diagram = flowchart.parse("` + data + `");
+        diagram.drawSVG('` + divID + `');
+
+        scale = ` + p["scale"] + `;
+        svgNode = $($("#` + divID + `").children()[0]);
+        svgNode.html("<g transform='scale("+scale+")'>"+svgNode.html()+"</g>");
+        svgNode.attr("height", svgNode.attr("height") * scale );
+        svgNode.attr("width", svgNode.attr("width") * scale );
+        </script>
     `
 
-    return div, nil
+	return div, nil
 
 }
-
-

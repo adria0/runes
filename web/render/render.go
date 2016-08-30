@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"log"
-    "errors"
 	"strings"
 
 	"github.com/adriamb/gopad/store"
@@ -35,42 +35,61 @@ const (
 )
 
 type renderer interface {
-    BlockDescriptor() string
+	BlockDescriptor() string
 }
 
 type divRenderer interface {
-    BlockDescriptor() string
-    HtmlHeaders() string
-    RenderToBuffer(data string, params string) (string, error)
+	renderer
+	HTMLHeaders() string
+	RenderToBuffer(data string, params string) (string, error)
 }
 
 type imageRenderer interface {
-    BlockDescriptor() string
-    ImageFileExtension() string
-    RenderToFile(data string, params string, filename string) error
+	renderer
+	ImageFileExtension() string
+	RenderToFile(data string, params string, filename string) error
 }
 
 var (
-	renderers  map[string]renderer
-    errNotImplemented = errors.New("Not implemented")
+	renderers         map[string]renderer
+	errNotImplemented = errors.New("Not implemented")
 )
 
 func init() {
 
-    rs := [...]renderer {
-        &dotRenderer{},
-        &goatRenderer{},
-        &jsseqRenderer{},
-        &jsflowRenderer{},
-    }
+	rs := [...]renderer{
+		&dotRenderer{},
+		&goatRenderer{},
+		&jsseqRenderer{},
+		&jsflowRenderer{},
+	}
 
-    renderers = make(map[string]renderer)
-    for _,r := range rs {
-        renderers[r.BlockDescriptor()]=r
-    }
+	renderers = make(map[string]renderer)
+	for _, r := range rs {
+		renderers[r.BlockDescriptor()] = r
+	}
 
 }
 
+func params2map(params string, defaults map[string]string) map[string]string {
+
+	ret := make(map[string]string)
+	for k, v := range defaults {
+		ret[k] = v
+	}
+
+	split := strings.Split(params, ";")
+	for _, param := range split {
+		if strings.Contains(param, "=") {
+			pair := strings.Split(param, "=")
+			ret[pair[0]] = pair[1]
+		} else {
+			ret[param] = "true"
+		}
+	}
+
+	return ret
+}
 
 func mustWrite(w io.Writer, p []byte) {
 	_, err := w.Write(p)
@@ -88,76 +107,82 @@ func mustWriteString(w io.Writer, s string) {
 
 func blockRenderer(content string, srange blackfriday.SourceRange, langAndParams string) (string, error) {
 
-	lap := strings.Split(langAndParams, ":")
+	lap := strings.Split(langAndParams, "|")
 	language := lap[0]
 
 	var class = ""
+	var params = ""
+
 	if len(lap) > 1 {
 		class = lap[1]
 	}
+	if len(lap) > 2 {
+		params = lap[2]
+	}
 
-    var r renderer
-    var exists bool
+	var r renderer
+	var exists bool
 
-    if r, exists = renderers[language]; !exists {
+	if r, exists = renderers[language]; !exists {
 		return "", fmt.Errorf("Handle for language " + language + " does not exist")
 	}
 
-    if imgR, ok := r.(imageRenderer) ; ok {
+	if imgR, ok := r.(imageRenderer); ok {
 
-        hasher := sha1.New()
-        mustWriteString(hasher, content)
-        sha1 := hasher.Sum(nil)
-        ID := hex.EncodeToString(sha1[:])
-        filename := ID + "."+ imgR.ImageFileExtension()
+		hasher := sha1.New()
+		mustWriteString(hasher, content)
+		sha1 := hasher.Sum(nil)
+		ID := hex.EncodeToString(sha1[:])
+		filename := ID + "." + imgR.ImageFileExtension()
 
-        if !store.ExistsCache(filename) {
+		if !store.ExistsCache(filename) {
 
-            filenameWithPath := store.GetCachePath(filename)
+			filenameWithPath := store.GetCachePath(filename)
 
-            if err := imgR.RenderToFile(content, "", filenameWithPath); err != nil {
-                return "", err
-            }
+			if err := imgR.RenderToFile(content, params, filenameWithPath); err != nil {
+				return "", err
+			}
 
-        }
+		}
 
-        imgloc := fmt.Sprintf("<img src=/cache/%s class=\""+class+"\" %s><br>", filename, srange.Attrs())
+		imgloc := fmt.Sprintf("<img src=/cache/%s class=\""+class+"\" %s><br>", filename, srange.Attrs())
 
-        return imgloc,nil
+		return imgloc, nil
 
-    } else {
+	}
 
-        divR := r.(divRenderer)
+	divR := r.(divRenderer)
 
-        rendered, err := divR.RenderToBuffer(content,"")
-        if err != nil {
-            return "", err
-        }
+	rendered, err := divR.RenderToBuffer(content, params)
+	if err != nil {
+		return "", err
+	}
 
-        div := fmt.Sprintf("<div class=\""+class+"\" %s>%s</div><br>", srange.Attrs(), string(rendered))
+	div := fmt.Sprintf("<div class=\""+class+"\" %s>%s</div><br>", srange.Attrs(), string(rendered))
 
-        return div, nil
-
-    }
+	return div, nil
 
 }
 
-func HtmlHeaders() string {
+// HTMLHeaders requiered in the html page to run the plugins
+func HTMLHeaders() string {
 
-    var buffer bytes.Buffer
+	var buffer bytes.Buffer
 
-    for _,r := range renderers {
+	for _, r := range renderers {
 
-    if divR, ok := r.(divRenderer) ; ok {
+		if divR, ok := r.(divRenderer); ok {
 
-        buffer.WriteString(divR.HtmlHeaders())
-    }
+			_, err := buffer.WriteString(divR.HTMLHeaders())
+			if err != nil {
+				panic(err)
+			}
+		}
 
-    }
+	}
 
-    return buffer.String()
+	return buffer.String()
 }
-
 
 // Render a markdown into html
 func Render(markdown string) []byte {
@@ -176,4 +201,3 @@ func Render(markdown string) []byte {
 	mustWriteString(&out, "</div>")
 	return out.Bytes()
 }
-
