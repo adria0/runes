@@ -71,7 +71,7 @@ type HtmlRendererParameters struct {
 	// If set, add this text to the back of each Header ID, to ensure uniqueness.
 	HeaderIDSuffix string
 	// Prepend this text to each relative URL.
-	BlockRenderer func(content []byte, srange SourceRange, language string) ([]byte, error)
+	BlockRenderer func(content string, srange SourceRange, language string) (string, error)
 }
 
 // Html is a type that implements the Renderer interface for HTML output.
@@ -266,9 +266,9 @@ func (options *Html) BlockCode(out *bytes.Buffer, text []byte, srange SourceRang
 
 	if lang!="" && options.parameters.BlockRenderer != nil {
 
-		html, err := options.parameters.BlockRenderer(text,srange,lang)
+		html, err := options.parameters.BlockRenderer(string(text),srange,lang)
 		if err == nil {
-			out.Write(html)
+			out.WriteString(html)
 			return
 		}
 

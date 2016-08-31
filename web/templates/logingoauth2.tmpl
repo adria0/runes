@@ -1,12 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+{{ template "head.tmpl" . }}
+
   <script src="https://apis.google.com/js/client.js"></script>
-  <script src="/static/js/jquery.min.js"></script>
-  <script src="/static/js/bootstrap.min.js"></script>
   <style>
     .top-buffer { margin-top:20px;  }  
   </style>
@@ -29,7 +23,6 @@
     {{ end  }}
 
 </div>
-</body>
 
 <script>
   
@@ -48,4 +41,4 @@
   }
 </script>
 
-</html>
+{{ template "tail.tmpl" . }}

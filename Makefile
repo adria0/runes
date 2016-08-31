@@ -104,3 +104,12 @@ deps-restore:
 	godep restore
 .PHONY: deps-restore
 
+# prepare to push to rcs
+
+rcs: rice-embed linters
+.PHONY: rcs
+
+rice-embed:
+	( cd web && go generate )
+.PHONY: rice-embed
+

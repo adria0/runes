@@ -8,6 +8,8 @@ import (
 	"github.com/adriamb/gopad/server/instance"
 	"github.com/adriamb/gopad/store/model"
 	"github.com/gin-gonic/gin"
+
+	"github.com/adriamb/gopad/web/render"
 )
 
 type tmplEntry struct {
@@ -76,9 +78,10 @@ func doGETEntries(c *gin.Context) {
 
 	err = nil
 	c.HTML(http.StatusOK, "entries.tmpl", gin.H{
-		"entries": htmlEntries,
-		"ws":      ws,
-		"error":   err,
+		"htmlHeaders": render.HTMLHeaders(),
+		"entries":     htmlEntries,
+		"ws":          ws,
+		"error":       err,
 	})
 }
 

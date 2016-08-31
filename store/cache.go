@@ -1,9 +1,11 @@
 package store
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"time"
 )
 
 var cacheDir string
@@ -22,8 +24,9 @@ func InitCache(aCacheDir, aTempDir string) {
 }
 
 // WriteTemp creates a temporally file
-func WriteTemp(filename string, data []byte) (string, error) {
-	path := GetTempPath(filename)
+func WriteTemp(data []byte) (string, error) {
+
+	path := GetTempPath(fmt.Sprintf("tmp-%v", time.Now().UnixNano()))
 	err := ioutil.WriteFile(path, data, 0644)
 	return path, err
 }

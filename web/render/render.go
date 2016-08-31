@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -13,14 +14,7 @@ import (
 	"github.com/russross/blackfriday"
 )
 
-type renderHandler struct {
-	filename func(string) string
-	render   func(string, string, []byte) error
-}
-
 const (
-	extPNG = ".png"
-
 	commonHTMLFlags = 0 |
 		blackfriday.HTML_USE_XHTML |
 		blackfriday.HTML_USE_SMARTYPANTS |
@@ -40,12 +34,62 @@ const (
 		blackfriday.EXTENSION_DEFINITION_LISTS
 )
 
+type renderer interface {
+	BlockDescriptor() string
+}
+
+type divRenderer interface {
+	renderer
+	HTMLHeaders() string
+	RenderToBuffer(data string, params string) (string, error)
+}
+
+type imageRenderer interface {
+	renderer
+	ImageFileExtension() string
+	RenderToFile(data string, params string, filename string) error
+}
+
 var (
-	renderHandlers = map[string]renderHandler{
-		"dot":  {filenameDot, renderDot},
-		"goat": {filenameGoat, renderGoat},
-	}
+	renderers         map[string]renderer
+	errNotImplemented = errors.New("Not implemented")
 )
+
+func init() {
+
+	rs := [...]renderer{
+		&dotRenderer{},
+		&goatRenderer{},
+		&jsseqRenderer{},
+		&jsflowRenderer{},
+	}
+
+	renderers = make(map[string]renderer)
+	for _, r := range rs {
+		renderers[r.BlockDescriptor()] = r
+	}
+
+}
+
+func params2map(params string, defaults map[string]string) map[string]string {
+
+	ret := make(map[string]string)
+	for k, v := range defaults {
+		ret[k] = v
+	}
+
+	split := strings.Split(params, ";")
+	for _, param := range split {
+		if strings.Contains(param, "=") {
+			pair := strings.Split(param, "=")
+			ret[pair[0]] = pair[1]
+		} else {
+			ret[param] = "true"
+		}
+	}
+
+	return ret
+}
 
 func mustWrite(w io.Writer, p []byte) {
 	_, err := w.Write(p)
@@ -61,39 +105,83 @@ func mustWriteString(w io.Writer, s string) {
 	}
 }
 
-func blockRenderer(content []byte, srange blackfriday.SourceRange, langAndParams string) ([]byte, error) {
+func blockRenderer(content string, srange blackfriday.SourceRange, langAndParams string) (string, error) {
 
-	var handler renderHandler
-	var exists bool
-
-	lap := strings.Split(langAndParams, ":")
+	lap := strings.Split(langAndParams, "|")
 	language := lap[0]
 
 	var class = ""
+	var params = ""
+
 	if len(lap) > 1 {
 		class = lap[1]
 	}
-
-	if handler, exists = renderHandlers[language]; !exists {
-		return nil, fmt.Errorf("Handle for language " + language + " does not exist")
+	if len(lap) > 2 {
+		params = lap[2]
 	}
 
-	hasher := sha1.New()
-	mustWrite(hasher, content)
-	sha1 := hasher.Sum(nil)
-	ID := hex.EncodeToString(sha1[:])
-	filename := handler.filename(ID)
+	var r renderer
+	var exists bool
 
-	if !store.ExistsCache(filename) {
-		if err := handler.render(filename, "", content); err != nil {
-			return nil, err
+	if r, exists = renderers[language]; !exists {
+		return "", fmt.Errorf("Handle for language " + language + " does not exist")
+	}
+
+	if imgR, ok := r.(imageRenderer); ok {
+
+		hasher := sha1.New()
+		mustWriteString(hasher, content)
+		sha1 := hasher.Sum(nil)
+		ID := hex.EncodeToString(sha1[:])
+		filename := ID + "." + imgR.ImageFileExtension()
+
+		if !store.ExistsCache(filename) {
+
+			filenameWithPath := store.GetCachePath(filename)
+
+			if err := imgR.RenderToFile(content, params, filenameWithPath); err != nil {
+				return "", err
+			}
+
 		}
+
+		imgloc := fmt.Sprintf("<img src=/cache/%s class=\""+class+"\" %s><br>", filename, srange.Attrs())
+
+		return imgloc, nil
+
 	}
 
-	imgloc := fmt.Sprintf("<img src=/cache/%s class=\""+class+"\" %s><br>", filename, srange.Attrs())
-	imglocbytes := []byte(imgloc)
+	divR := r.(divRenderer)
 
-	return imglocbytes, nil
+	rendered, err := divR.RenderToBuffer(content, params)
+	if err != nil {
+		return "", err
+	}
+
+	div := fmt.Sprintf("<div class=\""+class+"\" %s>%s</div><br>", srange.Attrs(), string(rendered))
+
+	return div, nil
+
+}
+
+// HTMLHeaders requiered in the html page to run the plugins
+func HTMLHeaders() string {
+
+	var buffer bytes.Buffer
+
+	for _, r := range renderers {
+
+		if divR, ok := r.(divRenderer); ok {
+
+			_, err := buffer.WriteString(divR.HTMLHeaders())
+			if err != nil {
+				panic(err)
+			}
+		}
+
+	}
+
+	return buffer.String()
 }
 
 // Render a markdown into html
