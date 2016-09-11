@@ -26,9 +26,13 @@ Install the runes with
 
 `go get https://github.com/adriamb/runes`
 
-run the runes 
+initialize the repository
 
-`runes`
+`runes create`
+
+then, start the runes 
+
+`runes start`
 
 go to a browser `http://localhost:8086`
 

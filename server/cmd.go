@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/user"
 
+	"github.com/adriamb/runes/store"
 	"github.com/adriamb/runes/server/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -20,12 +21,38 @@ var C config.Config
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "runes",
-	Short: "Minimal go notepad",
-	Long:  `A minimal markdown personal notepad written in go`,
+	Short: "A personal markdown pad",
+	Long:  "A personal markdown pad",
 	Run: func(cmd *cobra.Command, args []string) {
-		startServer(C)
+        cmd.Help()
+    },
+}
+
+var runCmd = &cobra.Command{
+	Use:   "start",
+	Short: "Start the server",
+	Long:  "Start the server",
+	Run: func(cmd *cobra.Command, args []string) {
+		json, _ := json.MarshalIndent(C, "", "  ")
+	    fmt.Println("Efective configuration: " + string(json))
+	    startServer(C)
 	},
 }
+
+var createCmd = &cobra.Command{
+	Use:   "create",
+	Short: "Creates the repository",
+	Long:  "Creates the repository",
+	Run: func(cmd *cobra.Command, args []string) {
+        store := store.NewStore(C.DataDir)
+        err := store.Entry.Create()
+        if err != nil {
+            log.Fatal(err)
+        }
+        fmt.Printf("Repository initialized")
+    },
+}
+
 
 // ExecuteCmd adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
@@ -40,12 +67,9 @@ func ExecuteCmd() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports Persistent Flags, which, if defined here,
-	// will be global for your application.
-
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.runes.yaml)")
-
+    RootCmd.AddCommand(createCmd)
+    RootCmd.AddCommand(runCmd)
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -87,8 +111,5 @@ func initConfig() {
 	if C.CacheDir == "" {
 		C.CacheDir = "/tmp/runes/cache"
 	}
-
-	json, _ := json.MarshalIndent(C, "", "  ")
-	fmt.Println("Efective configuration: " + string(json))
 
 }

@@ -21,6 +21,10 @@ func startServer(config config.Config) {
 	g.Use(gin.Logger(), gin.Recovery())
 
 	store := store.NewStore(config.DataDir)
+    err := store.Entry.Open()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	instance.Srv = &instance.Server{
 		Engine: g,
@@ -30,7 +34,7 @@ func startServer(config config.Config) {
 
 	web.Initialize()
 
-	err := instance.Srv.Engine.Run(":" + strconv.Itoa(instance.Srv.Config.Port))
+	err = instance.Srv.Engine.Run(":" + strconv.Itoa(instance.Srv.Config.Port))
 	if err != nil {
 		log.Fatal(err)
 	}

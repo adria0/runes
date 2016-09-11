@@ -49,6 +49,17 @@ func NewEntryStore(config Config) *EntryStore {
 	return &EntryStore{config}
 }
 
+func (es *EntryStore) Create() error {
+    return os.MkdirAll(es.path, 0744)
+}
+
+func (es *EntryStore) Open() error {
+    if _, err := os.Stat(es.path); os.IsNotExist(err) {
+        return fmt.Errorf("Repository %s does not exist ",es.path)
+    }
+    return nil
+}
+
 func (es *EntryStore) getMarkdownPath(workspace, ID, version string) string {
 	if version == "" {
 		return es.path + "/" + workspace + "/" + ID + ".md"
