@@ -1,11 +1,11 @@
 version: '2'
 services:
-    gopad:
+    runes:
         build: .
-        working_dir: /go/src/github.com/adriamb/gopad
-        command: go run main.go start --config docker/gopad.yaml
+        working_dir: /go/src/github.com/adriamb/runes
+        command: go run main.go start --config docker/runes.yaml
         ports:
             - "127.0.0.1:8086:8086"
         volumes:
-            - ..:/go/src/github.com/adriamb/gopad
+            - ..:/go/src/github.com/adriamb/runes
 

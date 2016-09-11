@@ -1,4 +1,4 @@
 port: 8086
-datadir: docker/data
+datadir: docker
 auth:
     type: none
