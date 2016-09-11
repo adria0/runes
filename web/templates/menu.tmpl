@@ -8,7 +8,7 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="/w/default">GoPad</a>
+      <a class="navbar-brand" href="/w/default">runes</a>
     </div>
 
     <!-- Collect the nav links, forms, and other content for toggling -->
@@ -19,12 +19,12 @@
         <li><a href="/w/{{ .ws }}/f">Files</a></li>
         <li><a href="/builtin/help">Help</a></li>
      </ul>
-      <form method="POST" action="/w/{{ .ws }}/search" class="navbar-form navbar-left" role="search">
-        <div class="form-group">
-          <input type="text" name="query" class="form-control" placeholder="Search">
-        </div>
-        <button type="submit" class="btn btn-default">Submit</button>
-      </form>
+      <form method="POST" action="/w/{{ .ws }}/search" class="nav-bar navbar-form navbar-left" role="search">
+      <div class="form-group">
+        <input type="text" name="query" class="form-control input-sm" placeholder="<regexp>">
+      </div>
+      <button type="submit" class="btn btn-default btn-sm">Search</button>
+    </form>
    </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->
 </nav>
