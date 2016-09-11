@@ -371,7 +371,7 @@ func (es *EntryStore) ListWorkspaces() ([]string, error) {
 		}
 
 		ws := entryDir.Name()
-		if !strings.HasPrefix(ws, "_") {
+		if !strings.HasPrefix(ws, "_") && !strings.HasPrefix(ws,"."){
 			list = append(list, ws)
 		}
 	}
