@@ -62,13 +62,13 @@ func initConfig() {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
-        if err := viper.Unmarshal(&C); err != nil {
-            panic(err)
-        }
-    } else {
-        fmt.Println("Configuration file ~/.gopad.yaml not found, using default settings.")
-	    C.Port = 8086
-    }
+		if err := viper.Unmarshal(&C); err != nil {
+			panic(err)
+		}
+	} else {
+		fmt.Println("Configuration file ~/.gopad.yaml not found, using default settings.")
+		C.Port = 8086
+	}
 
 	if C.DataDir == "" {
 		usr, err := user.Current()
