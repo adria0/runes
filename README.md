@@ -24,7 +24,7 @@ runes is a notepad web application, with the following features:
 
 Install the runes with
 
-`go get https://github.com/adriamb/runes`
+`go get github.com/adriamb/runes`
 
 initialize the repository
 
