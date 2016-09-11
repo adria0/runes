@@ -213,7 +213,7 @@ cond(no)->sub1(right)->op1
 ### About images & attaching files
 
 * Drop an image or a file into the markdown editor to add it
-  to the gopad filesystem
+  to the runes filesystem
 
 * When using images you can scale it easely
 

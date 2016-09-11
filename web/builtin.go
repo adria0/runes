@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/GeertJohan/go.rice"
-	"github.com/adriamb/gopad/web/render"
+	"github.com/adriamb/runes/web/render"
 )
 
 func doGETBuiltin(c *gin.Context) {

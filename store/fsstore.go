@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/adriamb/gopad/store/model"
+	"github.com/adriamb/runes/store/model"
 )
 
 const (
@@ -47,6 +47,19 @@ func existsPath(path string) bool {
 func NewEntryStore(config Config) *EntryStore {
 
 	return &EntryStore{config}
+}
+
+// Create a new repository
+func (es *EntryStore) Create() error {
+	return os.MkdirAll(es.path, 0744)
+}
+
+// Open the repository
+func (es *EntryStore) Open() error {
+	if _, err := os.Stat(es.path); os.IsNotExist(err) {
+		return fmt.Errorf("Repository %s does not exist ", es.path)
+	}
+	return nil
 }
 
 func (es *EntryStore) getMarkdownPath(workspace, ID, version string) string {
@@ -340,8 +353,55 @@ func (es *EntryStore) StoreFile(workspace, ID string, filename string, reader io
 	return nil
 }
 
+// ListWorkspaces  returns the list of existing  workspaces
+func (es *EntryStore) ListWorkspaces() ([]string, error) {
+
+	entryDirs, err := ioutil.ReadDir(es.path + "/")
+
+	if err != nil {
+		return nil, err
+	}
+
+	list := []string{}
+
+	for _, entryDir := range entryDirs {
+
+		if !entryDir.IsDir() {
+			continue
+		}
+
+		ws := entryDir.Name()
+		if !strings.HasPrefix(ws, "_") && !strings.HasPrefix(ws, ".") {
+			list = append(list, ws)
+		}
+	}
+
+	return list, nil
+}
+
+// CreateWorkspace creates a new workspace
+func (es *EntryStore) CreateWorkspace(ws string) error {
+
+	path := es.path + "/" + ws
+	return os.MkdirAll(path, 0744)
+
+}
+
+// DeleteWorkspace removes a workspace
+func (es *EntryStore) DeleteWorkspace(ws string) error {
+
+	path := es.path + "/" + ws
+	removedPath := es.path + "/_" + ws
+
+	return os.Rename(
+		path,
+		removedPath,
+	)
+
+}
+
 // ListFiles  all files
-func (es *EntryStore) ListFiles(workspace string) ([]model.File, error) {
+func (es *EntryStore) ListFiles(workspace string) ([]FoundFile, error) {
 
 	entryDirs, err := ioutil.ReadDir(es.path + "/" + workspace)
 
@@ -349,7 +409,7 @@ func (es *EntryStore) ListFiles(workspace string) ([]model.File, error) {
 		return nil, err
 	}
 
-	list := []model.File{}
+	list := []FoundFile{}
 
 	for _, entryDir := range entryDirs {
 
@@ -371,7 +431,7 @@ func (es *EntryStore) ListFiles(workspace string) ([]model.File, error) {
 				continue
 			}
 
-			list = append(list, model.File{
+			list = append(list, FoundFile{
 				Workspace: workspace,
 				ID:        ID,
 				Filename:  file.Name(),

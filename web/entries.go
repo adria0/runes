@@ -5,11 +5,11 @@ package web
 import (
 	"net/http"
 
-	"github.com/adriamb/gopad/server/instance"
-	"github.com/adriamb/gopad/store/model"
+	"github.com/adriamb/runes/server/instance"
+	"github.com/adriamb/runes/store/model"
 	"github.com/gin-gonic/gin"
 
-	"github.com/adriamb/gopad/web/render"
+	"github.com/adriamb/runes/web/render"
 )
 
 type tmplEntry struct {

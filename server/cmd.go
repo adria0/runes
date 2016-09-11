@@ -7,7 +7,8 @@ import (
 	"os"
 	"os/user"
 
-	"github.com/adriamb/gopad/server/config"
+	"github.com/adriamb/runes/server/config"
+	"github.com/adriamb/runes/store"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -19,11 +20,36 @@ var C config.Config
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "gopad",
-	Short: "Minimal go notepad",
-	Long:  `A minimal markdown personal notepad written in go`,
+	Use:   "runes",
+	Short: "A personal markdown pad",
+	Long:  "A personal markdown pad",
 	Run: func(cmd *cobra.Command, args []string) {
+		_ = cmd.Help()
+	},
+}
+
+var runCmd = &cobra.Command{
+	Use:   "start",
+	Short: "Start the server",
+	Long:  "Start the server",
+	Run: func(cmd *cobra.Command, args []string) {
+		json, _ := json.MarshalIndent(C, "", "  ")
+		fmt.Println("Efective configuration: " + string(json))
 		startServer(C)
+	},
+}
+
+var createCmd = &cobra.Command{
+	Use:   "create",
+	Short: "Creates the repository",
+	Long:  "Creates the repository",
+	Run: func(cmd *cobra.Command, args []string) {
+		store := store.NewStore(C.DataDir)
+		err := store.Entry.Create()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("Repository initialized")
 	},
 }
 
@@ -40,11 +66,9 @@ func ExecuteCmd() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports Persistent Flags, which, if defined here,
-	// will be global for your application.
-
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gopad.yaml)")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.runes.yaml)")
+	RootCmd.AddCommand(createCmd)
+	RootCmd.AddCommand(runCmd)
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -54,9 +78,9 @@ func initConfig() {
 	}
 
 	viper.SetConfigType("yaml")
-	viper.SetConfigName(".gopad") // name of config file (without extension)
+	viper.SetConfigName(".runes") // name of config file (without extension)
 	viper.AddConfigPath("$HOME")  // adding home directory as first search path
-	viper.SetEnvPrefix("gopad")   // so viper.AutomaticEnv will get matching envvars starting with O2M_
+	viper.SetEnvPrefix("runes")   // so viper.AutomaticEnv will get matching envvars starting with O2M_
 	viper.AutomaticEnv()          // read in environment variables that match
 
 	// If a config file is found, read it in.
@@ -66,9 +90,9 @@ func initConfig() {
 			panic(err)
 		}
 	} else {
-		fmt.Println("Configuration file ~/.gopad.yaml not found, using default settings.")
+		fmt.Println("Configuration file ~/.runes.yaml not found, using default settings.")
 		C.Port = 8086
-        C.Auth.Type = config.AuthNone
+		C.Auth.Type = config.AuthNone
 	}
 
 	if C.DataDir == "" {
@@ -76,18 +100,15 @@ func initConfig() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		C.DataDir = usr.HomeDir + "/.gopad"
+		C.DataDir = usr.HomeDir + "/.runes"
 	}
 
 	if C.TmpDir == "" {
-		C.TmpDir = "/tmp/gopad/temp"
+		C.TmpDir = "/tmp/runes/tmp"
 	}
 
 	if C.CacheDir == "" {
-		C.CacheDir = "/tmp/gopad/cache"
+		C.CacheDir = "/tmp/runes/cache"
 	}
-
-	json, _ := json.MarshalIndent(C, "", "  ")
-	fmt.Println("Efective configuration: " + string(json))
 
 }

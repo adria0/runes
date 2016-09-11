@@ -3,7 +3,7 @@ package render
 import (
 	"bytes"
 	"fmt"
-	"github.com/adriamb/gopad/store"
+	"github.com/adriamb/runes/store"
 	"os/exec"
 )
 
