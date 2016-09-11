@@ -8,9 +8,9 @@ import (
 	"net/http"
 
 	"github.com/GeertJohan/go.rice"
-	"github.com/adriamb/gopad/server/instance"
-	"github.com/adriamb/gopad/store"
-	"github.com/adriamb/gopad/web/render"
+	"github.com/adriamb/runes/server/instance"
+	"github.com/adriamb/runes/store"
+	"github.com/adriamb/runes/web/render"
 	"github.com/gin-gonic/gin"
 )
 
@@ -27,8 +27,9 @@ var markdownRender = template.FuncMap{
 func generateTemplate() *template.Template {
 	templateList := []string{
 		"500.tmpl", "builtin.tmpl", "entry.tmpl", "logingoauth2.tmpl",
-		"search.tmpl", "entries.tmpl", "files.tmpl", "menu.tmpl",
-		"head.tmpl", "tail.tmpl",
+		"search.tmpl", "entries.tmpl", "files.tmpl",
+		"headbegin.tmpl", "headend.tmpl", "tail.tmpl", "workspaces.tmpl",
+		"workspacemenu.tmpl",
 	}
 
 	tbox, tboxerr := rice.FindBox("templates")
@@ -71,8 +72,12 @@ func Initialize() {
 	authorized := instance.Srv.Engine.Group("/")
 	authorized.Use(checkAuthorization())
 
+	authorized.GET("/w", doGETWorkspaces)
+
 	authorized.GET("/w/:ws", doGETEntries)
 	authorized.GET("/w/:ws/f", doGETFiles)
+	authorized.GET("/w/:ws/new", doGETNewWorkspace)
+	authorized.GET("/w/:ws/delete", doGETDeleteWorkspace)
 	authorized.POST("/w/:ws/search", doPOSTSearch)
 
 	authorized.GET("/w/:ws/e/:id", doGETEntries)

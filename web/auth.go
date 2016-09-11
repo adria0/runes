@@ -6,9 +6,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/adriamb/gopad/server/config"
-	"github.com/adriamb/gopad/server/instance"
-	"github.com/adriamb/gopad/web/auth"
+	"github.com/adriamb/runes/server/config"
+	"github.com/adriamb/runes/server/instance"
+	"github.com/adriamb/runes/web/auth"
 	"github.com/gin-gonic/gin"
 )
 
@@ -27,7 +27,7 @@ func doGETLogin(c *gin.Context) {
 
 	if instance.Srv.Config.Auth.Type == config.AuthNone {
 		aa.Authorize(c)
-		c.Redirect(http.StatusSeeOther, "/w/default")
+		c.Redirect(http.StatusSeeOther, "/w")
 		return
 	}
 
@@ -58,6 +58,6 @@ func doPOSTGoogleOauth2Login(c *gin.Context) {
 			"error": err,
 		})
 	} else {
-		c.Redirect(http.StatusSeeOther, "/w/default")
+		c.Redirect(http.StatusSeeOther, "/w")
 	}
 }

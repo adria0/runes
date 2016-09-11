@@ -1,0 +1,31 @@
+
+  <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li><a href="/w/{{ .ws }}/e/new/edit">New entry</a></li>
+        <li><a href="/w/{{ .ws }}">Entries</a></li>
+        <li><a href="/w/{{ .ws }}/f">Files</a></li>
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Special<span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="#" id="deleteworkspace">Delete workspace</a></li>
+            </ul>
+        </li>    
+     </ul>
+      <form method="POST" action="/w/{{ .ws }}/search" class="nav-bar navbar-form navbar-left" role="search">
+      <div class="form-group">
+        <input type="text" name="query" class="form-control input-sm" placeholder="<regexp>">
+      </div>
+      <button type="submit" class="btn btn-default btn-sm">Search</button>
+    </form>
+   </div><!-- /.navbar-collapse -->
+
+<script>
+$("#deleteworkspace").click( function() {
+    var ws = prompt("Write workspace name to confirm", "");
+    if (ws!=null && ws=="{{.ws}}") {
+        window.location.href = '/w/'+ws+'/delete';
+    }
+})
+</script>
+

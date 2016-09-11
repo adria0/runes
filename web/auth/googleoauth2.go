@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/adriamb/gopad/server/instance"
+	"github.com/adriamb/runes/server/instance"
 	"github.com/gin-gonic/gin"
 )
 

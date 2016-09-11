@@ -1,8 +1,8 @@
 package instance
 
 import (
-	"github.com/adriamb/gopad/server/config"
-	"github.com/adriamb/gopad/store"
+	"github.com/adriamb/runes/server/config"
+	"github.com/adriamb/runes/store"
 	"github.com/gin-gonic/gin"
 )
 

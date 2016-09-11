@@ -1,7 +1,7 @@
-package model
+package store
 
-// File type
-type File struct {
+// FoundFile type
+type FoundFile struct {
 	Workspace string
 	ID        string
 	Filename  string
