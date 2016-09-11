@@ -173,10 +173,8 @@ func HTMLHeaders() string {
 
 		if divR, ok := r.(divRenderer); ok {
 
-			_, err := buffer.WriteString(divR.HTMLHeaders())
-			if err != nil {
-				panic(err)
-			}
+			mustWriteString(&buffer, divR.HTMLHeaders())
+
 		}
 
 	}
