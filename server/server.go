@@ -21,7 +21,7 @@ func startServer(config config.Config) {
 	g.Use(gin.Logger(), gin.Recovery())
 
 	store := store.NewStore(config.DataDir)
-    err := store.Entry.Open()
+	err := store.Entry.Open()
 	if err != nil {
 		log.Fatal(err)
 	}

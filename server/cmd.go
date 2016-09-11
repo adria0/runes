@@ -7,8 +7,8 @@ import (
 	"os"
 	"os/user"
 
-	"github.com/adriamb/runes/store"
 	"github.com/adriamb/runes/server/config"
+	"github.com/adriamb/runes/store"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -24,8 +24,8 @@ var RootCmd = &cobra.Command{
 	Short: "A personal markdown pad",
 	Long:  "A personal markdown pad",
 	Run: func(cmd *cobra.Command, args []string) {
-        cmd.Help()
-    },
+		_ = cmd.Help()
+	},
 }
 
 var runCmd = &cobra.Command{
@@ -34,8 +34,8 @@ var runCmd = &cobra.Command{
 	Long:  "Start the server",
 	Run: func(cmd *cobra.Command, args []string) {
 		json, _ := json.MarshalIndent(C, "", "  ")
-	    fmt.Println("Efective configuration: " + string(json))
-	    startServer(C)
+		fmt.Println("Efective configuration: " + string(json))
+		startServer(C)
 	},
 }
 
@@ -44,15 +44,14 @@ var createCmd = &cobra.Command{
 	Short: "Creates the repository",
 	Long:  "Creates the repository",
 	Run: func(cmd *cobra.Command, args []string) {
-        store := store.NewStore(C.DataDir)
-        err := store.Entry.Create()
-        if err != nil {
-            log.Fatal(err)
-        }
-        fmt.Printf("Repository initialized")
-    },
+		store := store.NewStore(C.DataDir)
+		err := store.Entry.Create()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("Repository initialized")
+	},
 }
-
 
 // ExecuteCmd adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
@@ -68,8 +67,8 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.runes.yaml)")
-    RootCmd.AddCommand(createCmd)
-    RootCmd.AddCommand(runCmd)
+	RootCmd.AddCommand(createCmd)
+	RootCmd.AddCommand(runCmd)
 }
 
 // initConfig reads in config file and ENV variables if set.
