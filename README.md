@@ -1,4 +1,4 @@
-# runes: a personal markdown notepad [![Build Status](https://travis-ci.org/adriamb/runes.svg?branch=master)](https://travis-ci.org/adriamb/runes) [![Go Report Card](https://goreportcard.com/badge/github.com/amassanet/runes)](https://goreportcard.com/report/github.com/amassanet/runes)
+[![Build Status](https://travis-ci.org/adriamb/runes.svg?branch=master)](https://travis-ci.org/adriamb/runes) [![Go Report Card](https://goreportcard.com/badge/github.com/adriamb/runes)](https://goreportcard.com/report/github.com/adriamb/runes)
 
 [![](README.md.files/runes.png)]()
 
