@@ -10,7 +10,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/adriamb/gopad/store"
+	"github.com/adriamb/runes/store"
 	"github.com/russross/blackfriday"
 )
 

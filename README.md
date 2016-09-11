@@ -1,10 +1,13 @@
-# gopad: a personal markdown notepad [![Build Status](https://travis-ci.org/adriamb/gopad.svg?branch=master)](https://travis-ci.org/adriamb/gopad) [![Go Report Card](https://goreportcard.com/badge/github.com/amassanet/gopad)](https://goreportcard.com/report/github.com/amassanet/gopad)
+# runes: a personal markdown notepad [![Build Status](https://travis-ci.org/adriamb/runes.svg?branch=master)](https://travis-ci.org/adriamb/runes) [![Go Report Card](https://goreportcard.com/badge/github.com/amassanet/runes)](https://goreportcard.com/report/github.com/amassanet/runes)
 
-[![](README.md.files/gopad.jpg)]()
+[![](README.md.files/runes.png)]()
 
+[![](README.md.files/screenshot.png)]()
 
-GoPad is a web application, with the following features:
+runes is a notepad web application, with the following features:
 
+- Blog style, sequential entries
+- Workspaces to group entries by project
 - **Markdown** support with github flavour
 - **Realtime render**: All data written in the markdown are automatically rendered, with support for
   - **Graphviz** (see http://www.graphviz.org/)
@@ -19,13 +22,13 @@ GoPad is a web application, with the following features:
 
 ## Installation
 
-Install the gopad with
+Install the runes with
 
-`go get https://github.com/adriamb/gopad`
+`go get https://github.com/adriamb/runes`
 
-run the gopad 
+run the runes 
 
-`gopad`
+`runes`
 
 go to a browser `http://localhost:8086`
 
@@ -33,7 +36,7 @@ go to a browser `http://localhost:8086`
 
 If you want to test the application, clone the repo
 
-`git clone https://github.com/adriamb/gopad`
+`git clone https://github.com/adriamb/runes`
 
 go to the docker folder
 
@@ -49,13 +52,13 @@ all files generated will be kept in the `docker/data`, take a look
 
 ## Configuration file
 
-Gopad uses the following configuration file, by default located in $HOME/.gopad.yaml but you can specify it with the `--config` command line parameter.
+runes uses the following configuration file, by default located in $HOME/.runes.yaml but you can specify it with the `--config` command line parameter.
 
 ```yaml
 port: <server port, e.g. 8086>
-datadir: <where data is stored, by default is $HOME/.gopad>
-tmpdir: <temp directory, by default is /tmp/gopad/tmp>
-cachedir: <cache directory, by default is /tmp/gopad/tmp>
+datadir: <where data is stored, by default is $HOME/.runes>
+tmpdir: <temp directory, by default is /tmp/runes/tmp>
+cachedir: <cache directory, by default is /tmp/runes/tmp>
 auth:
     type: <'none' or 'google'>
     googleclientid: <google oauth2 clientid>

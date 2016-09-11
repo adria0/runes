@@ -1,9 +1,8 @@
-{{ template "head.tmpl" . }}
+{{ template "headbegin.tmpl" . }}
 
-</head>
-<body>
+{{ template "workspacemenu.tmpl" . }}
 
-{{template "menu.tmpl" . }}
+{{template "headend.tmpl" . }}
 
 <div class="container">
  {{ if .results }}

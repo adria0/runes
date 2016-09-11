@@ -3,10 +3,10 @@
 package web
 
 import (
-	"github.com/adriamb/gopad/server/instance"
-	"github.com/adriamb/gopad/store"
-	"github.com/adriamb/gopad/store/model"
-	"github.com/adriamb/gopad/web/render"
+	"github.com/adriamb/runes/server/instance"
+	"github.com/adriamb/runes/store"
+	"github.com/adriamb/runes/store/model"
+	"github.com/adriamb/runes/web/render"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
@@ -133,7 +133,8 @@ func doGETEntryEdit(c *gin.Context) {
 	} else {
 
 		entry = &model.Entry{
-			ID: instance.Srv.Store.Entry.NewID(),
+			ID:       instance.Srv.Store.Entry.NewID(),
+			Markdown: "# Title\n",
 		}
 
 	}

@@ -4,10 +4,10 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/adriamb/gopad/server/config"
-	"github.com/adriamb/gopad/server/instance"
-	"github.com/adriamb/gopad/store"
-	"github.com/adriamb/gopad/web"
+	"github.com/adriamb/runes/server/config"
+	"github.com/adriamb/runes/server/instance"
+	"github.com/adriamb/runes/store"
+	"github.com/adriamb/runes/web"
 	"github.com/gin-gonic/gin"
 )
 

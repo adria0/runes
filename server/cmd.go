@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/user"
 
-	"github.com/adriamb/gopad/server/config"
+	"github.com/adriamb/runes/server/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -19,7 +19,7 @@ var C config.Config
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "gopad",
+	Use:   "runes",
 	Short: "Minimal go notepad",
 	Long:  `A minimal markdown personal notepad written in go`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -44,7 +44,8 @@ func init() {
 	// Cobra supports Persistent Flags, which, if defined here,
 	// will be global for your application.
 
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gopad.yaml)")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.runes.yaml)")
+
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -54,9 +55,9 @@ func initConfig() {
 	}
 
 	viper.SetConfigType("yaml")
-	viper.SetConfigName(".gopad") // name of config file (without extension)
+	viper.SetConfigName(".runes") // name of config file (without extension)
 	viper.AddConfigPath("$HOME")  // adding home directory as first search path
-	viper.SetEnvPrefix("gopad")   // so viper.AutomaticEnv will get matching envvars starting with O2M_
+	viper.SetEnvPrefix("runes")   // so viper.AutomaticEnv will get matching envvars starting with O2M_
 	viper.AutomaticEnv()          // read in environment variables that match
 
 	// If a config file is found, read it in.
@@ -66,7 +67,7 @@ func initConfig() {
 			panic(err)
 		}
 	} else {
-		fmt.Println("Configuration file ~/.gopad.yaml not found, using default settings.")
+		fmt.Println("Configuration file ~/.runes.yaml not found, using default settings.")
 		C.Port = 8086
 		C.Auth.Type = config.AuthNone
 	}
@@ -76,15 +77,15 @@ func initConfig() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		C.DataDir = usr.HomeDir + "/.gopad"
+		C.DataDir = usr.HomeDir + "/.runes"
 	}
 
 	if C.TmpDir == "" {
-		C.TmpDir = "/tmp/gopad/temp"
+		C.TmpDir = "/tmp/runes/tmp"
 	}
 
 	if C.CacheDir == "" {
-		C.CacheDir = "/tmp/gopad/cache"
+		C.CacheDir = "/tmp/runes/cache"
 	}
 
 	json, _ := json.MarshalIndent(C, "", "  ")
