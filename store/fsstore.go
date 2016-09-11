@@ -122,6 +122,23 @@ func (es *EntryStore) GetEntry(workspace, ID, version string) (*model.Entry, err
 		ID:        ID,
 	}
 
+	files, err := ioutil.ReadDir(es.path + "/" + workspace + "/" + ID + "/f")
+
+	entry.Files = make([]string, 0, len(files))
+
+	if err == nil {
+
+		for _, file := range files {
+
+			if file.IsDir() {
+				continue
+			}
+
+			entry.Files = append(entry.Files, file.Name())
+
+		}
+	}
+
 	return entry, nil
 }
 

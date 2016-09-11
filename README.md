@@ -12,8 +12,9 @@ GoPad is a web application, with the following features:
   - **Js Sequence diagrams** (see https://bramp.github.io/js-sequence-diagrams/)
   - **Js Flowchart** (see http://flowchart.js.org/)
 - **Attachments** support, just drag&drop
-- **No database** , all data are written into the filesystem with .md and .json files. If you want to backup the data, just copy the folder, or create a git repo for it.
-- **No data is overwritten**, attachments cannot be overwritten, page changes are versioned
+- **Page changes** are kept and versioned
+- **No database** , all data are written into the filesystem. If you want to backup the data, just copy the folder, or create a git repo for it.
+- **No data is overwritten**, attachments cannot be overwritten
 - **Google OAuth2** support, if you want you can push your blog in a public space and log into with your google account.
 
 ## Installation
@@ -22,17 +23,11 @@ Install the gopad with
 
 `go get https://github.com/adriamb/gopad`
 
-create a minimal configuration file `$HOME/.gopad.yaml` with the following content:
-
-```yaml
-port: 8080
-```
-
 run the gopad 
 
 `gopad`
 
-go to a browser `http://localhost:8080`
+go to a browser `http://localhost:8086`
 
 ## Fast test with docker
 
@@ -48,7 +43,7 @@ run docker-compose
 
 `docker-compose up`
 
-go to a browser `http://localhost:8088`
+go to a browser `http://localhost:8086`
 
 all files generated will be kept in the `docker/data`, take a look
 
@@ -57,7 +52,7 @@ all files generated will be kept in the `docker/data`, take a look
 Gopad uses the following configuration file, by default located in $HOME/.gopad.yaml but you can specify it with the `--config` command line parameter.
 
 ```yaml
-port: <server port, e.g. 8080>
+port: <server port, e.g. 8086>
 datadir: <where data is stored, by default is $HOME/.gopad>
 tmpdir: <temp directory, by default is /tmp/gopad/tmp>
 cachedir: <cache directory, by default is /tmp/gopad/tmp>

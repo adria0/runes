@@ -11,6 +11,11 @@
       <div class="col-lg-2 col-md-1 col-sm-1"></div>
       <div class="col-lg-8 col-md-10 col-sm-10" id="text">
           {{ $entry.Markdown | markdown }}
+          <div class="files">
+            {{ range $file := $entry.Files }}
+               <a href="/w/{{ $.ws }}/e/{{ $entry.ID }}/f/{{ $file }}">{{ $file }}</a><br> 
+            {{ end }}
+          </div>
           <a href="/w/{{ $.ws }}/e/{{ $entry.ID }}" class="btn btn-default pull-right btn-sm">View</a>
           <a href="/w/{{ $.ws }}/e/{{ $entry.ID }}/edit" class="btn btn-default pull-right btn-sm btn-space">Edit</a>
         </div>

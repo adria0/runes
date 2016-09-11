@@ -38,6 +38,12 @@ h2 {
     overflow-y: auto;
 }
 
+.files {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    text-align: right;
+}
+
 .top-buffer { margin-top:20px;  }
 
 .input-large {
