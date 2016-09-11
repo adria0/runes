@@ -68,6 +68,7 @@ func initConfig() {
 	} else {
 		fmt.Println("Configuration file ~/.gopad.yaml not found, using default settings.")
 		C.Port = 8086
+        C.Auth.Type = config.AuthNone
 	}
 
 	if C.DataDir == "" {
