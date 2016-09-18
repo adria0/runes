@@ -233,11 +233,11 @@ func (es *EntryStore) ListEntries(workspace string) ([]*model.Entry, error) {
 				return nil, err
 			}
 
-            if strings.HasPrefix(entry.Markdown,"# ^") {
-                entries = append([]*model.Entry { entry }, entries... )
-            } else {
-                entries = append(entries, entry)
-            }
+			if strings.HasPrefix(entry.Markdown, "# ^") {
+				entries = append([]*model.Entry{entry}, entries...)
+			} else {
+				entries = append(entries, entry)
+			}
 		}
 	}
 
