@@ -81,6 +81,7 @@ func Initialize() {
 	authorized.POST("/w/:ws/search", doPOSTSearch)
 
 	authorized.GET("/w/:ws/e/:id", doGETEntries)
+	authorized.POST("/w/:ws/e/:id/quickadd", doPOSTQuickadd)
 	authorized.GET("/w/:ws/e/:id/edit", doGETEntryEdit)
 	authorized.POST("/w/:ws/e/:id/delete", doPOSTEntryDelete)
 	authorized.POST("/w/:ws/e/:id", doPOSTEntry)

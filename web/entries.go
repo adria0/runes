@@ -100,3 +100,22 @@ func doGETFiles(c *gin.Context) {
 		"files": files,
 	})
 }
+
+type dtoQuickadd struct {
+	Text string
+}
+
+func doPOSTQuickadd(c *gin.Context) {
+	ws := normalize(c.Param("ws"))
+	id := normalize(c.Param("id"))
+
+	var json dtoQuickadd
+	if c.BindJSON(&json) == nil {
+		entry, err := instance.Srv.Store.Entry.GetEntry(ws, id, "")
+		if err != nil {
+			return
+		}
+		entry.Markdown = entry.Markdown + "\nquickadd: " + json.Text
+		_ = instance.Srv.Store.Entry.StoreEntry(entry)
+	}
+}
