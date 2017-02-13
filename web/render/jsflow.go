@@ -22,7 +22,7 @@ func (j *jsflowRenderer) BlockDescriptor() string {
 func (j *jsflowRenderer) HTMLHeaders() string {
 
 	return `
-    <script src="http://flowchart.js.org/flowchart-latest.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
     `
 }
 

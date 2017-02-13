@@ -22,9 +22,9 @@ func (j *jsseqRenderer) BlockDescriptor() string {
 func (j *jsseqRenderer) HTMLHeaders() string {
 
 	return `
-    <script src="https://bramp.github.io/js-sequence-diagrams/js/raphael-min.js"></script>
-    <script src="https://bramp.github.io/js-sequence-diagrams/js/underscore-min.js"></script>
-    <script src="https://bramp.github.io/js-sequence-diagrams/js/sequence-diagram-min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
     `
 }
 
