@@ -17,6 +17,7 @@
           </div>
           <a href="/w/{{ $.ws }}/e/{{ $entry.ID }}" class="btn btn-default pull-right btn-sm">View</a>
           <a href="/w/{{ $.ws }}/e/{{ $entry.ID }}/edit" class="btn btn-default pull-right btn-sm btn-space">Edit</a>
+          <a href="#" id="qadd{{ $entry.ID }}" class="btn btn-default pull-right btn-sm btn-space">Quick add</a>
         </div>
       </div>
       <div class="col-lg-2 col-md-1 col-sm-1"></div>
@@ -38,6 +39,26 @@
 <script>
 
 $(".markdown table").addClass("table table-condensed");
+
+function quickadd(entryid) {
+   var what = prompt("what?", "");
+   if (what == null) {
+      return
+   }
+    $.ajax({
+        type: "POST",
+        url: "/w/{{ $.ws }}/e/"+entryid+"/quickadd",
+        data: JSON.stringify({ text: what  }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json"
+    });
+}
+
+{{ range $entry := .entries }}
+    $("#qadd{{ $entry.ID }}").click(function(){
+        quickadd("{{ $entry.ID }}");
+    })
+{{ end }}
 
 </script>
 
