@@ -38,13 +38,8 @@ go to a browser `http://localhost:8086`
 
 ## Fast test with docker
 
-If you want to test the application, clone the repo
-
-`git clone https://github.com/adriamb/runes`
-
-go to the docker folder
-
-`cd docker`
+If you want to test the application, copy the docker
+folder 
 
 run docker-compose
 
@@ -52,7 +47,7 @@ run docker-compose
 
 go to a browser `http://localhost:8086`
 
-all files generated will be kept in the `docker/data`, take a look
+all files generated will be kept in the `data` folder, take a look
 
 ## Configuration file
 
