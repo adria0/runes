@@ -6,19 +6,21 @@
 
 runes is a notepad web application, with the following features:
 
-- Blog style, sequential entries
-- Workspaces to group entries by project
+[ **Blog style, sequential entries**
+- **Workspaces to group entries by project**
 - **Markdown** support with github flavour
 - **Realtime render**: All data written in the markdown are automatically rendered, with support for
-  - **Graphviz** (see http://www.graphviz.org/)
-  - **Goat**  (see https://github.com/blampe/goat)
-  - **Js Sequence diagrams** (see https://bramp.github.io/js-sequence-diagrams/)
-  - **Js Flowchart** (see http://flowchart.js.org/)
+  - [x] **Graphviz** (see http://www.graphviz.org/)
+  - [x] **Goat**  (see https://github.com/blampe/goat)
+  - [x] **Js Sequence diagrams** (see https://bramp.github.io/js-sequence-diagrams/)
+  - [x] **Js Flowchart** (see http://flowchart.js.org/)
+  - [ ] **Latex**
 - **Attachments** support, just drag&drop
 - **Page changes** are kept and versioned
 - **No database** , all data are written into the filesystem. If you want to backup the data, just copy the folder, or create a git repo for it.
 - **No data is overwritten**, attachments cannot be overwritten
 - **Google OAuth2** support, if you want you can push your blog in a public space and log into with your google account.
+- **TLS support**
 
 ## Installation
 
