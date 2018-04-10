@@ -6,7 +6,7 @@
 
 runes is a notepad web application, with the following features:
 
-[ **Blog style, sequential entries**
+- **Blog style, sequential entries**
 - **Workspaces to group entries by project**
 - **Markdown** support with github flavour
 - **Realtime render**: All data written in the markdown are automatically rendered, with support for
