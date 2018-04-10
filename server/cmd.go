@@ -91,7 +91,7 @@ func initConfig() {
 		}
 	} else {
 		fmt.Println("Configuration file ~/.runes.yaml not found, using default settings.")
-		C.Port = 8086
+		C.WebServer.Bind = ":8086"
 		C.Auth.Type = config.AuthNone
 	}
 

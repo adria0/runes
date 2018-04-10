@@ -8,7 +8,11 @@ const AuthNone = "none"
 
 // Config is the server configurtion
 type Config struct {
-	Port     int    // Port to listen to
+	WebServer struct {
+		Bind     string
+		CertFile string
+		KeyFile  string
+	}
 	DataDir  string // Where blog content are served
 	TmpDir   string // A temporally directory
 	CacheDir string // Cache directory for generated images

@@ -2,7 +2,6 @@ package server
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/adriamb/runes/server/config"
 	"github.com/adriamb/runes/server/instance"
@@ -33,8 +32,15 @@ func startServer(config config.Config) {
 	}
 
 	web.Initialize()
-
-	err = instance.Srv.Engine.Run(":" + strconv.Itoa(instance.Srv.Config.Port))
+	if instance.Srv.Config.WebServer.CertFile != "" {
+		err = instance.Srv.Engine.RunTLS(
+			instance.Srv.Config.WebServer.Bind,
+			instance.Srv.Config.WebServer.CertFile,
+			instance.Srv.Config.WebServer.KeyFile,
+		)
+	} else {
+		err = instance.Srv.Engine.Run(instance.Srv.Config.WebServer.Bind)
+	}
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -1,4 +1,6 @@
-port: 8086
+webserver:
+    bind: 8086
+
 datadir: /root/data
 auth:
     type: none
